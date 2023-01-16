@@ -1,0 +1,7 @@
+author,to_remove,note,books,conspiracy,crypto,thedonald
+dc98995ab1ecc1f812b1cacbe0942f2da34fc4639168e538,comments,dummy author label for removed comments,1,1,1,1
+883c847acfb7c40b18d504b206c5061c4454be34aa81c1bd,comments,moderator bot but also starts regular discussions in books,1,1,1,0
+5fe11acea1ba780086614f6b6f5a36a449cc0902eb0306d1,all,moderator for r/books,1,0,0,0
+419d47aa6bb1b54248959880a65b4244c9ec86d938e78240,all,moderator for r/books,1,0,0,0
+872a7a2986dad903832622afd5519b99fafd319dd9f90d10,all,spam bot in r/books,1,0,0,0
+b681b233b3fce366a02ac8c11f6cdf643f31989f8a6ad5b2,all,'moderator bot in r/crypto only comments',0,0,1,0
