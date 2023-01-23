@@ -6,3 +6,73 @@
 
 - Datasets with certain authors removed as defined in 'authors_to_remove.csv': 'cleaned_datasets.p'
 
+- Same as cleaned_datasets.p but with sentiment cols: 'sentiment_datasets.p'
+
+# Analyses
+
+## 1. Clean datasets `clean_datasets.ipynb`
+    - check number of removed rows
+    - combine any data that needs combining
+    - identify most active authors and check whether bots or not
+    - remove spam
+Outputs: `datasets.p`, `cleaned_datasets.p`
+## 2. Perform sentiment analysis `2_sentiment_analysis.py`
+Outputs: `sentiment_datasets.p`
+## 3. Big-picture, macroscopic analyses `3_whole_subreddit_analyses.ipynb`
+### Done so far
+    - sentiment score histograms
+    - check neutral sentiment activity `neutral_sentiment_activity` dir
+    - activity over time (#todo worth changing timezone on this)
+
+### To do?
+    - cumulative score histograms
+    - sentiment score over time
+    - post activation time?
+    - score vs sentiment?
+
+
+## 4. Microscopic analyses (authors)
+check report graphs
+### Done
+### To do
+    - Author activity hists
+    - author type (author vs post proportion histogram)
+    - author sentiment score
+    - author activation time
+
+## 5. Creating threads dataset
+    - see `separate_threads.ipynb` for process of making dataset into threads
+    - see `find_missing_threads.ipnb` for process of properly cleaning thread dataset
+
+## 6. Thread characteristics
+    - see `thread_analysis.ipnb`
+    - thread size by activity histogram
+    - thread size by participating users histogram
+    - thread levels, and level cumulative sums
+    - mean and max thread depth
+
+### Unsuccessful threads
+    - see `threads_that_die.ipnb`
+    - proportion of unsuccessful threads
+    - sentiment distribution of successful vs unsuccessful threads
+    - time of day of successful vs unsuccessful thread activity
+    - average sentiment over time of s vs uns threads
+    - sentiment per chunk of time & day of week
+
+### Authors
+    - see `author_stats_tests.ipnb`
+    - author probability density vs sentiment score for successful and unsuccessful authors, with different author thresholds
+    - 2-sided K-S tests
+    - see `thread_authors.ipynb`
+    - thread starters vs number of threads started
+    - author prob density vs proportion of alive threads
+    - comparisons between majority successful and majority unsuccessful authors (prob density vs sentiment score, prob density vs thread count, prob dens vs mean thread size)
+
+### Regression
+#### Logistic regression
+    - see `logit_with_sm.ipynb`
+    
+
+
+
+
