@@ -10,21 +10,21 @@
 
 # Analyses
 
-## 1. Clean datasets `clean_datasets.ipynb`
+## 1. Clean datasets `clean_datasets.ipynb` - **DONE**
     - check number of removed rows
     - combine any data that needs combining
     - identify most active authors and check whether bots or not
     - remove spam
 Outputs: `datasets.p`, `cleaned_datasets.p`
-## 2. Perform sentiment analysis `2_sentiment_analysis.py`
+## 2. Perform sentiment analysis `2_sentiment_analysis.py` - **DONE**
 Outputs: `sentiment_datasets.p`
 ## 3. Big-picture, macroscopic analyses `3_whole_subreddit_analyses.ipynb`
 ### Done so far
     - sentiment score histograms
     - check neutral sentiment activity `neutral_sentiment_activity` dir
-    - activity over time (#todo worth changing timezone on this)
-
+    - activity over time
 ### To do?
+    - change timezone in reddit_dataclass graphs over time
     - cumulative score histograms
     - sentiment score over time
     - post activation time?
@@ -40,10 +40,14 @@ check report graphs
     - author sentiment score
     - author activation time
 
-## 5. Creating threads dataset
+## 5. Creating threads dataset `5_separate_threads.ipynb`
     - see `separate_threads.ipynb` for process of making dataset into threads
     - see `find_missing_threads.ipnb` for process of properly cleaning thread dataset
 
+Outputs:
+    - amendment to `sentiment_datasets.p` (readable parent col)
+    - `thread_data.p` (this includes data that has not been assigned a thread level)
+    - `clean_thread_data.p`, `unclassified_thread_data.p`
 ## 6. Thread characteristics
     - see `thread_analysis.ipnb`
     - thread size by activity histogram
