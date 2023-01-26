@@ -1,12 +1,20 @@
 # Datasets
 
-- Raw data: '/home/cara/Documents/subreddit_data'
+- Raw data: `/home/cara/Documents/subreddit_data`
 
-- Datasets (nothing removed, raw dataset but thedonald combined months): 'datasets.p'
+- Datasets (nothing removed, raw dataset but thedonald combined months): `datasets.p`
 
-- Datasets with certain authors removed as defined in 'authors_to_remove.csv': 'cleaned_datasets.p'
+- Datasets with certain authors removed as defined in `authors_to_remove.csv`: `cleaned_datasets.p`
 
-- Same as cleaned_datasets.p but with sentiment cols: 'sentiment_datasets.p'
+- Same as cleaned_datasets.p but with sentiment cols: `sentiment_datasets.p`
+
+- Preliminary thread data, including unclassified: `thread_data.p`
+
+- Thread data with unclassified threads removed: `clean_thread_data.p`
+
+- Information on thread size, number of participating authors, preliminary levels info: `thread_info.p`
+
+- More in-depth levels info including cumulative sums: `thread_lvls_info.p`
 
 # Analyses
 
@@ -40,22 +48,24 @@ check report graphs
     - author sentiment score
     - author activation time
 
-## 5. Creating threads dataset `5_separate_threads.ipynb`
-    - see `separate_threads.ipynb` for process of making dataset into threads
-    - see `find_missing_threads.ipnb` for process of properly cleaning thread dataset
-
-Outputs:
+## 5. Creating threads dataset `5_separate_threads.ipynb` - **DONE**
+    - separated data out into threads
+    - found unclassified data (missing link in chain)
+### Outputs:
     - amendment to `sentiment_datasets.p` (readable parent col)
     - `thread_data.p` (this includes data that has not been assigned a thread level)
     - `clean_thread_data.p`, `unclassified_thread_data.p`
-## 6. Thread characteristics
+## 6. Thread characteristics `6_thread_characteristics.ipynb` - **DONE**
     - see `thread_analysis.ipnb`
     - thread size by activity histogram
     - thread size by participating users histogram
-    - thread levels, and level cumulative sums
     - mean and max thread depth
-
-### Unsuccessful threads
+    - thread levels, and level cumulative sums
+### Outputs
+    - `thread_info.p`
+    - `thread_lvls_info.p`
+    
+### Unsuccessful threads `7_unsuccessful_thread_characteristics.ipynb`
     - see `threads_that_die.ipnb`
     - proportion of unsuccessful threads
     - sentiment distribution of successful vs unsuccessful threads
