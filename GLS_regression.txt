@@ -1,0 +1,212 @@
+###books###
+model = ALL, y = thread size, x = subject sentiment score
+                            GLS Regression Results                            
+==============================================================================
+Dep. Variable:        log_thread_size   R-squared:                       0.003
+Model:                            GLS   Adj. R-squared:                  0.003
+Method:                 Least Squares   F-statistic:                     15.91
+Date:                Wed, 01 Feb 2023   Prob (F-statistic):           6.75e-05
+Time:                        17:47:48   Log-Likelihood:                -8432.9
+No. Observations:                4776   AIC:                         1.687e+04
+Df Residuals:                    4774   BIC:                         1.688e+04
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+===========================================================================================
+                              coef    std err          t      P>|t|      [0.025      0.975]
+-------------------------------------------------------------------------------------------
+Intercept                   0.8132      0.021     38.619      0.000       0.772       0.854
+subject_sentiment_score    -0.2584      0.065     -3.989      0.000      -0.385      -0.131
+==============================================================================
+Omnibus:                     1797.898   Durbin-Watson:                   1.940
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):             5728.713
+Skew:                           1.969   Prob(JB):                         0.00
+Kurtosis:                       6.643   Cond. No.                         3.18
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+model = SUCCESS ONLY, y = thread size, x = subject sentiment score
+                            GLS Regression Results                            
+==============================================================================
+Dep. Variable:        log_thread_size   R-squared:                       0.005
+Model:                            GLS   Adj. R-squared:                  0.005
+Method:                 Least Squares   F-statistic:                     8.378
+Date:                Wed, 01 Feb 2023   Prob (F-statistic):            0.00385
+Time:                        17:47:48   Log-Likelihood:                -2806.2
+No. Observations:                1557   AIC:                             5616.
+Df Residuals:                    1555   BIC:                             5627.
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+===========================================================================================
+                              coef    std err          t      P>|t|      [0.025      0.975]
+-------------------------------------------------------------------------------------------
+Intercept                   2.4531      0.038     64.924      0.000       2.379       2.527
+subject_sentiment_score    -0.3279      0.113     -2.894      0.004      -0.550      -0.106
+==============================================================================
+Omnibus:                      217.060   Durbin-Watson:                   2.000
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):              316.990
+Skew:                           1.014   Prob(JB):                     1.47e-69
+Kurtosis:                       3.879   Cond. No.                         3.06
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+###conspiracy###
+model = ALL, y = thread size, x = subject sentiment score
+                            GLS Regression Results                            
+==============================================================================
+Dep. Variable:        log_thread_size   R-squared:                       0.001
+Model:                            GLS   Adj. R-squared:                  0.001
+Method:                 Least Squares   F-statistic:                     8.359
+Date:                Wed, 01 Feb 2023   Prob (F-statistic):            0.00384
+Time:                        17:47:48   Log-Likelihood:                -20803.
+No. Observations:               11395   AIC:                         4.161e+04
+Df Residuals:                   11393   BIC:                         4.163e+04
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+===========================================================================================
+                              coef    std err          t      P>|t|      [0.025      0.975]
+-------------------------------------------------------------------------------------------
+Intercept                   2.1438      0.014    149.227      0.000       2.116       2.172
+subject_sentiment_score    -0.1216      0.042     -2.891      0.004      -0.204      -0.039
+==============================================================================
+Omnibus:                      402.034   Durbin-Watson:                   1.972
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):              445.698
+Skew:                           0.484   Prob(JB):                     1.65e-97
+Kurtosis:                       2.994   Cond. No.                         3.01
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+model = SUCCESS ONLY, y = thread size, x = subject sentiment score
+                            GLS Regression Results                            
+==============================================================================
+Dep. Variable:        log_thread_size   R-squared:                       0.000
+Model:                            GLS   Adj. R-squared:                  0.000
+Method:                 Least Squares   F-statistic:                     2.652
+Date:                Wed, 01 Feb 2023   Prob (F-statistic):              0.103
+Time:                        17:47:48   Log-Likelihood:                -16262.
+No. Observations:                9675   AIC:                         3.253e+04
+Df Residuals:                    9673   BIC:                         3.254e+04
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+===========================================================================================
+                              coef    std err          t      P>|t|      [0.025      0.975]
+-------------------------------------------------------------------------------------------
+Intercept                   2.5302      0.014    187.250      0.000       2.504       2.557
+subject_sentiment_score    -0.0638      0.039     -1.629      0.103      -0.141       0.013
+==============================================================================
+Omnibus:                      844.481   Durbin-Watson:                   2.018
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):             1084.505
+Skew:                           0.779   Prob(JB):                    3.18e-236
+Kurtosis:                       3.513   Cond. No.                         2.98
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+###crypto###
+model = ALL, y = thread size, x = subject sentiment score
+                            GLS Regression Results                            
+==============================================================================
+Dep. Variable:        log_thread_size   R-squared:                       0.008
+Model:                            GLS   Adj. R-squared:                  0.008
+Method:                 Least Squares   F-statistic:                     117.7
+Date:                Wed, 01 Feb 2023   Prob (F-statistic):           2.60e-27
+Time:                        17:47:48   Log-Likelihood:                -28958.
+No. Observations:               14818   AIC:                         5.792e+04
+Df Residuals:                   14816   BIC:                         5.793e+04
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+===========================================================================================
+                              coef    std err          t      P>|t|      [0.025      0.975]
+-------------------------------------------------------------------------------------------
+Intercept                   1.3403      0.014     94.084      0.000       1.312       1.368
+subject_sentiment_score    -0.5097      0.047    -10.847      0.000      -0.602      -0.418
+==============================================================================
+Omnibus:                     1799.685   Durbin-Watson:                   2.011
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):             2553.988
+Skew:                           1.017   Prob(JB):                         0.00
+Kurtosis:                       3.007   Cond. No.                         3.36
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+model = SUCCESS ONLY, y = thread size, x = subject sentiment score
+                            GLS Regression Results                            
+==============================================================================
+Dep. Variable:        log_thread_size   R-squared:                       0.001
+Model:                            GLS   Adj. R-squared:                  0.001
+Method:                 Least Squares   F-statistic:                     8.228
+Date:                Wed, 01 Feb 2023   Prob (F-statistic):            0.00414
+Time:                        17:47:48   Log-Likelihood:                -11855.
+No. Observations:                6770   AIC:                         2.371e+04
+Df Residuals:                    6768   BIC:                         2.373e+04
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+===========================================================================================
+                              coef    std err          t      P>|t|      [0.025      0.975]
+-------------------------------------------------------------------------------------------
+Intercept                   2.8788      0.017    169.425      0.000       2.845       2.912
+subject_sentiment_score    -0.1564      0.055     -2.868      0.004      -0.263      -0.050
+==============================================================================
+Omnibus:                      154.868   Durbin-Watson:                   2.035
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):              165.419
+Skew:                           0.372   Prob(JB):                     1.20e-36
+Kurtosis:                       3.179   Cond. No.                         3.22
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+###thedonald###
+model = ALL, y = thread size, x = subject sentiment score
+                            GLS Regression Results                            
+==============================================================================
+Dep. Variable:        log_thread_size   R-squared:                       0.000
+Model:                            GLS   Adj. R-squared:                 -0.002
+Method:                 Least Squares   F-statistic:                   0.07106
+Date:                Wed, 01 Feb 2023   Prob (F-statistic):              0.790
+Time:                        17:47:48   Log-Likelihood:                -571.22
+No. Observations:                 491   AIC:                             1146.
+Df Residuals:                     489   BIC:                             1155.
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+===========================================================================================
+                              coef    std err          t      P>|t|      [0.025      0.975]
+-------------------------------------------------------------------------------------------
+Intercept                   0.4575      0.036     12.571      0.000       0.386       0.529
+subject_sentiment_score    -0.0268      0.100     -0.267      0.790      -0.224       0.170
+==============================================================================
+Omnibus:                      199.823   Durbin-Watson:                   2.030
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):              649.630
+Skew:                           1.952   Prob(JB):                    8.60e-142
+Kurtosis:                       7.064   Cond. No.                         2.90
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
+model = SUCCESS ONLY, y = thread size, x = subject sentiment score
+                            GLS Regression Results                            
+==============================================================================
+Dep. Variable:        log_thread_size   R-squared:                       0.000
+Model:                            GLS   Adj. R-squared:                 -0.006
+Method:                 Least Squares   F-statistic:                  0.002516
+Date:                Wed, 01 Feb 2023   Prob (F-statistic):              0.960
+Time:                        17:47:48   Log-Likelihood:                -187.55
+No. Observations:                 165   AIC:                             379.1
+Df Residuals:                     163   BIC:                             385.3
+Df Model:                           1                                         
+Covariance Type:            nonrobust                                         
+===========================================================================================
+                              coef    std err          t      P>|t|      [0.025      0.975]
+-------------------------------------------------------------------------------------------
+Intercept                   1.3529      0.061     22.139      0.000       1.232       1.474
+subject_sentiment_score     0.0087      0.173      0.050      0.960      -0.332       0.350
+==============================================================================
+Omnibus:                       52.604   Durbin-Watson:                   2.024
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):              107.728
+Skew:                           1.463   Prob(JB):                     4.05e-24
+Kurtosis:                       5.667   Cond. No.                         2.95
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.

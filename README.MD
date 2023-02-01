@@ -16,6 +16,10 @@
 
 - More in-depth levels info including cumulative sums: `thread_lvls_info.p`
 
+- All, failed and successful posts: `thread_posts.p`
+
+- All, failed and successful posts including EDT timestamp col: `thread_posts_EDT.p`
+
 # Analyses
 
 ## 1. Clean datasets `clean_datasets.ipynb` - **DONE**
@@ -69,10 +73,20 @@ check report graphs
     - see `threads_that_die.ipnb`
     - proportion of unsuccessful threads
     - sentiment distribution of successful vs unsuccessful threads
-    - time of day of successful vs unsuccessful thread activity
+    - time of day of successful vs unsuccessful thread activity + 2-sided K-S test
     - average sentiment over time of s vs uns threads
+        - hourly
+#### To do:
     - sentiment per chunk of time & day of week
 
+### Outputs
+Added to `failed_threads` sheet of `dataset_summaries.ods`:
+    - proportion of failed threads
+    - statistical tests on the sentiment of successful vs failed posts
+    - stats on subject sentiment score of failed and successful posts
+    - hourly activity 2-sided K-S test successful vs failed thread results
+
+- All, failed and successful posts: `thread_posts.p`, `thread_posts_EDT.p`
 ### Authors
     - see `author_stats_tests.ipnb`
     - author probability density vs sentiment score for successful and unsuccessful authors, with different author thresholds
@@ -82,9 +96,15 @@ check report graphs
     - author prob density vs proportion of alive threads
     - comparisons between majority successful and majority unsuccessful authors (prob density vs sentiment score, prob density vs thread count, prob dens vs mean thread size)
 
-### Regression
+### Regressions - `9_regression.ipynb`
 #### Logistic regression
     - see `logit_with_sm.ipynb`
+
+#### Linear regressions
+##### Outputs
+
+    - `OLS_regression.txt`
+    - `GLS_regression.txt`
     
 
 
