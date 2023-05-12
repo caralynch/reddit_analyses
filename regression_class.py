@@ -99,38 +99,120 @@ class LogisticRegression(TimestampClass):
         self.regression_metrics = {}
 
     
-    def __main__(self):
+    def main(self):
+        """
+        For each period:
+        - gets collection period data and regression model data
+        - runs FSS if required and gets sm modstrings
+        - iterates through every proposed model:
+            - runs logistic regressions
+            - calculates metrics required (AIC, BIC, AUC)
+        """
         self.period_counter = 1
+        # iterate through each time period to model
         for date_index in range(
             0, len(self.date_array) - (
             self.regression_params['collection_window'] +
             self.regression_params['model_window']),
             self.regression_params['step']
             ):
-            print(f"Period {self.period_counter}")
+            print(f"# Period {self.period_counter} #")
 
             # get model data for this period
-            regression_model_data = self.get_regression_model_data(date_index)
+            self.regression_model_data = self.get_regression_model_data(date_index)
 
             # if need FSS, run FSS for this time period
             if 'FSS' in self.regression_params:
                 print(f'Running FSS')
-                self.FSS_metrics[self.period_counter] = (
-                    self.logit_forward_sequential_selection(
-                    regression_model_data[self.regression_params['x_cols']],
-                    regression_model_data[self.regression_params['y_col']],
-                    name=f'{self.regression_params['name']}_period_{self.period_counter}',
-                    scoring_method=self.regression_params['performance_scoring_method'])
-                )
-
-                sm_modstrings = self.get_modstrings_from_FSS()
+                self.sm_modstrings = self.run_FSS()
             else:
-                sm_modstrings = self.regression_params['models']
+                self.sm_modstrings = self.regression_params['models']
                 # TODO fill in this section
             
-            # TODO continue run_regressions section
+            # iterate through each model
+            model_results = {}
+            param_dict = {}
+            for mod_key in self.sm_modstrings:
+                print(f"Model {mod_key}")
+                logit_out_dict = self.run_logit_regression(mod_key)
+                model_results[mod_key] = logit_out_dict['model metrics']
+                param_dict[mod_key] = logit_out_dict['regression params']
             
+            # convert model metrics dict to df 
+            model_results = pd.DataFrame.from_dict(model_results, orient='index')
+            
+            self.regression_metrics[self.period_counter] = {
+                'regression_params': param_dict,
+                'metrics': model_results
+            }
+
             self.period_counter += 1
+    
+    def run_logit_regression(self, mod_key):
+        """Runs logistic regression for given model and updates model result and
+        parameters dicts with metrics and regression parameters for given model.
+
+        Parameters
+        ----------
+        mod_key : int
+            Key of given model (also corresponds to number of features in FSS case) to
+            run (modstrings are in self.sm_modstrings)
+        
+        Returns
+        -------
+        Dict
+            With 'model metrics' and 'regression params' keys
+        """
+        logit_model = smf.logit(
+            self.sm_modstrings[mod_key],
+            data = self.regression_model_data
+            ).fit()
+        
+        model_results = {}
+        model_results['num_features'] = mod_key
+        model_results['model'] = self.sm_modstrings[mod_key]
+        
+        if 'aic' in self.regression_params['metrics']:
+            model_results['aic'] = logit_model.aic
+        if 'bic' in self.regression_params['metrics']:
+            model_results['bic'] = logit_model.bic
+        if 'roc_auc' in self.regression_params['metrics']:
+            model_results['auc'] = (
+                metrics.roc_auc_score(
+                self.regression_model_data.success,
+                logit_model.predict()
+                )
+            )
+            
+        param_df= (
+            pd.DataFrame(logit_model.params).rename(columns={0: mod_key})
+        )
+
+        out_dict = {
+            'model_metrics': model_results,
+            'regression_params': param_df
+        }
+        return out_dict
+    
+    def run_FSS(self):
+        """Run Forward Sequential Selection, adding metrics to self.FSS_metrics dict,
+        and exporting statsmodels modstrings from selected models
+
+        Returns
+        -------
+        Dict
+            dictionary of model strings from FSS
+        """
+        self.FSS_metrics[self.period_counter] = (
+            self.logit_forward_sequential_selection(
+            regression_model_data[self.regression_params['x_cols']],
+            regression_model_data[self.regression_params['y_col']],
+            name=f'{self.regression_params['name']}_period_{self.period_counter}',
+            scoring_method=self.regression_params['performance_scoring_method']
+            )
+            )
+        return self.get_modstrings_from_FSS()
+
         
     def get_modstrings_from_FSS(self):
         """After running FSS, creates dictionary of statsmodels model strings to run
@@ -162,6 +244,48 @@ class LogisticRegression(TimestampClass):
             features[i] = list(feature_tuple)
             i += 1
         return features
+    
+    def plot_metrics_vs_features(self, metrics_to_plot, name='', figsize=(7,7)):
+        """Plot given metrics (aic, roc_auc, bic) on 1 plot.
+
+        Parameters
+        ----------
+        metrics_to_plot : list(str)
+            list of metrics to plot
+        name : str, optional
+            subreddit name, by default ''
+        figsize : tuple, optional
+            figure size, by default (7,7)
+        """
+
+        linestyles = ['solid', 'dotted', 'dashed']
+        plt_colours = list(mcolors.TABLEAU_COLORS.keys())
+        fig, ax = plt.subplots(1, figsize=figsize)
+        if len(metrics_to_plot) > 1:
+            ax_list = [ax, ax.twinx()]
+        else:
+            ax_list = [ax]
+
+
+        for period in self.regression_metrics:
+            for i, metric in enumerate(metrics_to_plot):
+                ax_list[i].plot(
+                    self.regression_metrics[period]['metrics'].index,
+                    self.regression_metrics[period]['metrics'].loc[:, (period, metric)],
+                    color=plt_colours[period], linestyle=linestyles[i],
+                    label=f'{metric} {period}'
+                )
+                ax_list[i].set_ylabel(metric)
+                ax_list[i].legend()
+
+        
+        ax.set_title(f"{name} information criteria vs number of features all periods")
+        ax.set_xlabel('Number of features')
+        
+        plt.show()
+
+        
+
 
     @staticmethod
     def get_sm_modstrings(x_list_dict: dict, y: str):
