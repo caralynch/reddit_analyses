@@ -98,10 +98,32 @@ class LogisticRegression():
             self.regression_params["metrics"] = ["roc_auc"]
 
         # get array of dates in dataset
-        self.date_array = self.thread_data.timestamp.apply(TimestampClass.get_date).unique()
+        date_array = self.thread_data.timestamp.apply(TimestampClass.get_date).unique()
+        # the dataset may be missing days - so create df from start and end dates
+        date_array = pd.date_range(start=date_array[0], end=date_array[-1])
+        self.date_array = pd.DataFrame(date_array)[0].apply(TimestampClass.get_date)
 
         # create dict for info collection
         self.regression_metrics = {}
+    
+    def calc_author_thread_counts(self):
+        """Update thread data df with author activity, post and comment counts. These
+        are calculated by looking at the 7 days preceding the day of current activity.
+
+        E.g. If author A has posted 5 times between days 6-10, and the collection window
+        is 5 days, then on day 11 the collection window is days 6-10 and the activity
+        count will be 5.
+        """
+        # need to go through each day after initial collection window up to end of data
+        for day in range(self.regression_params['collection_window'],
+                         len(self.date_array)):
+            
+            # collection window is current day - collection window, up to (and
+            # excluding) current day
+            collection_window = self.date_array[
+                day-self.regression_params['collection_window']:day
+                ]
+
 
     def main(self):
         """
@@ -420,83 +442,7 @@ class LogisticRegression():
         """
         return (np.sign(column), np.absolute(column))
 
-    def get_author_collection_data(self, date_index):
-        """Get thread data from collection period only, calculating author activity
-        counts and sentiment means
 
-        Parameters
-        ----------
-        date_index : int
-            Index of start date of collection window
-
-        Returns
-        -------
-        pd.DataFrame
-            Author activity count, activity ratio and mean sentiment score throughout
-            collection period
-        """
-        # get collection dates
-        collection_dates = self.date_array[
-            date_index : date_index + self.regression_params["collection_window"]
-        ]
-
-        # get thread data in collection dates
-        thread_collection_data = self.thread_data[
-            self.thread_data.timestamp.apply(self.get_date).isin(collection_dates)
-        ]
-
-        # separate by activity
-        thread_activity = {
-            "all_activity": thread_collection_data,
-            "post": thread_collection_data[
-                thread_collection_data.thread_id == thread_collection_data.id
-            ],
-            "comment": thread_collection_data[
-                thread_collection_data.thread_id != thread_collection_data.id
-            ],
-        }
-
-        started = False
-        for key in thread_activity:
-            author_activity_count = (
-                thread_activity[key][["author", "id"]]
-                .groupby("author")
-                .count()
-                .rename(columns={"id": f"author_{key}_count"})
-            )
-            if not started:
-                author_activity = author_activity_count
-                started = True
-            else:
-                author_activity = (
-                    pd.concat((author_activity, author_activity_count), axis=1)
-                    .fillna(0)
-                    .astype(int)
-                )
-
-        # get activity ratio
-        author_activity["activity_ratio"] = (
-            author_activity.author_comment_count - author_activity.author_post_count
-        ) / author_activity.author_all_activity_count
-
-        # get mean sentiment score
-        author_mean_sentiment = (
-            thread_activity["all_activity"][["author", "sentiment_score"]]
-            .groupby("author")
-            .mean()
-            .rename(columns={"sentiment_score": f"mean_author_sentiment"})
-        )
-
-        # combine to form author info df
-        author_info = pd.concat(
-            (
-                author_activity[["author_all_activity_count", "activity_ratio"]],
-                author_mean_sentiment,
-            ),
-            axis=1,
-        )
-
-        return author_info
 
     @staticmethod
     def logit_forward_sequential_selection(X, y, name="", scoring_method="roc_auc"):
@@ -580,6 +526,86 @@ class LogisticRegression():
             return row.subject_sentiment_score
         else:
             return row.body_sentiment_score
+
+    def get_author_collection_data(self, date_index):
+        """DEPRECATED
+        Get thread data from collection period only, calculating author activity
+        counts and sentiment means. This should only be used when collection period and
+        model period are completely separate - e.g. no rolling time windows.
+
+        Parameters
+        ----------
+        date_index : int
+            Index of start date of collection window
+
+        Returns
+        -------
+        pd.DataFrame
+            Author activity count, activity ratio and mean sentiment score throughout
+            collection period
+        """
+        # get collection dates
+        collection_dates = self.date_array[
+            date_index : date_index + self.regression_params["collection_window"]
+        ]
+
+        # get thread data in collection dates
+        thread_collection_data = self.thread_data[
+            self.thread_data.timestamp.apply(self.get_date).isin(collection_dates)
+        ]
+
+        # separate by activity
+        thread_activity = {
+            "all_activity": thread_collection_data,
+            "post": thread_collection_data[
+                thread_collection_data.thread_id == thread_collection_data.id
+            ],
+            "comment": thread_collection_data[
+                thread_collection_data.thread_id != thread_collection_data.id
+            ],
+        }
+
+        started = False
+        for key in thread_activity:
+            author_activity_count = (
+                thread_activity[key][["author", "id"]]
+                .groupby("author")
+                .count()
+                .rename(columns={"id": f"author_{key}_count"})
+            )
+            if not started:
+                author_activity = author_activity_count
+                started = True
+            else:
+                author_activity = (
+                    pd.concat((author_activity, author_activity_count), axis=1)
+                    .fillna(0)
+                    .astype(int)
+                )
+
+        # get activity ratio
+        author_activity["activity_ratio"] = (
+            author_activity.author_comment_count - author_activity.author_post_count
+        ) / author_activity.author_all_activity_count
+
+        # get mean sentiment score
+        author_mean_sentiment = (
+            thread_activity["all_activity"][["author", "sentiment_score"]]
+            .groupby("author")
+            .mean()
+            .rename(columns={"sentiment_score": f"mean_author_sentiment"})
+        )
+
+        # combine to form author info df
+        author_info = pd.concat(
+            (
+                author_activity[["author_all_activity_count", "activity_ratio"]],
+                author_mean_sentiment,
+            ),
+            axis=1,
+        )
+
+        return author_info
 
 
 class TimestampClass:
