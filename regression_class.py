@@ -19,7 +19,7 @@ from mlxtend.feature_selection import SequentialFeatureSelector
 from mlxtend.plotting import plot_sequential_feature_selection as plot_sfs
 
 
-class LogisticRegression():
+class LogisticRegression:
     def __init__(self, regression_params: dict):
         """Initialise regression data class
 
@@ -34,6 +34,7 @@ class LogisticRegression():
                 stats), in days,
             'model_window': size of modelling window in days,
             'step': steps between modelling windows in days,
+            'validation_window': size of validation window in days,
             'FSS': whether to do FSS or not,
             'performance_scoring_method': method used to score FSS,
             'x_cols': features to model (used when doing FSS),
@@ -49,6 +50,8 @@ class LogisticRegression():
             "hour": TimestampClass.get_hour,
         }
 
+        self.regression_params = {}
+
         self.regression_data = regression_params["regression_data"]
 
         # want sentiment in thread data to be one col
@@ -60,12 +63,11 @@ class LogisticRegression():
             ["thread_id", "id", "timestamp", "author", "sentiment_score"]
         ]
 
-        self.regression_params = {}
-        for window in ["collection_window", "model_window", "step"]:
-            if window not in regression_params:
-                self.regression_params[window] = 7
-            else:
-                self.regression_params[window] = regression_params[window]
+        # if doing validation, add validation window
+        # if doing multiple model periods, add step between them
+        for param in ["validation_window", "step"]:
+            if param in regression_params:
+                self.regression_params[param] = regression_params[param]
 
         if "name" in regression_params:
             self.regression_params["name"] = regression_params["name"]
@@ -99,13 +101,28 @@ class LogisticRegression():
 
         # get array of dates in dataset
         date_array = self.thread_data.timestamp.apply(TimestampClass.get_date).unique()
+
         # the dataset may be missing days - so create df from start and end dates
         date_array = pd.date_range(start=date_array[0], end=date_array[-1])
         self.date_array = pd.DataFrame(date_array)[0].apply(TimestampClass.get_date)
 
+        for window in ["collection_window", "model_window"]:
+            if window not in regression_params:
+                if window == "collection_window":
+                    self.regression_params[window] = 7
+                elif "validation_window" in self.regression_params:
+                    self.regression_params[window] = len(self.date_array) - (
+                        self.regression_params["validation_window"]
+                        + self.regression_params["collection_window"]
+                    )
+                else:
+                    self.regression_params[window] = 7
+            else:
+                self.regression_params[window] = regression_params[window]
+
         # create dict for info collection
         self.regression_metrics = {}
-    
+
     def calc_author_thread_counts(self):
         """Update thread data df with author activity, post and comment counts. These
         are calculated by looking at the 7 days preceding the day of current activity.
@@ -114,41 +131,157 @@ class LogisticRegression():
         is 5 days, then on day 11 the collection window is days 6-10 and the activity
         count will be 5.
         """
+        # create new cols in thread data df to store author data
+        new_cols = [
+            "author_all_activity_count",
+            "author_post_count",
+            "author_comment_count",
+            "activity_ratio",
+            "mean_author_sentiment",
+        ]
+
+        # to avoid warning dating when creating new cols
+        pd.options.mode.chained_assignment = None
+        for new_col in new_cols:
+            self.thread_data[new_col] = 0
+
         # need to go through each day after initial collection window up to end of data
-        for day in range(self.regression_params['collection_window'],
-                         len(self.date_array)):
-            
+        for day in range(
+            self.regression_params["collection_window"], len(self.date_array)
+        ):
+
             # collection window is current day - collection window, up to (and
             # excluding) current day
             collection_window = self.date_array[
-                day-self.regression_params['collection_window']:day
+                day - self.regression_params["collection_window"] : day
+            ]
+
+            # find thread data in collection window
+            collection_thread_data = self.thread_data[
+                self.thread_data.timestamp.apply(TimestampClass.get_date).isin(
+                    collection_window
+                )
+            ]
+
+            # find thread data on current day
+            day_thread_data = self.thread_data[
+                self.thread_data.timestamp.apply(TimestampClass.get_date)
+                == self.date_array[day]
+            ]
+
+            # only need to look at collection data for authors that were active today
+            collection_thread_data = collection_thread_data[
+                collection_thread_data.author.isin(day_thread_data.author)
+            ]
+
+            # separate by activity
+            thread_activity = {
+                "all_activity": collection_thread_data,
+                "post": collection_thread_data[
+                    collection_thread_data.thread_id == collection_thread_data.id
+                ],
+                "comment": collection_thread_data[
+                    collection_thread_data.thread_id != collection_thread_data.id
+                ],
+            }
+
+            started = False
+            for key in thread_activity:
+                author_activity_count = (
+                    thread_activity[key][["author", "id"]]
+                    .groupby("author")
+                    .count()
+                    .rename(columns={"id": f"author_{key}_count"})
+                )
+                if not started:
+                    author_activity = author_activity_count
+                    started = True
+                else:
+                    author_activity = (
+                        pd.concat((author_activity, author_activity_count), axis=1)
+                        .fillna(0)
+                        .astype(int)
+                    )
+
+            # get activity ratio
+            author_activity["activity_ratio"] = (
+                author_activity.author_comment_count - author_activity.author_post_count
+            ) / author_activity.author_all_activity_count
+
+            # get mean sentiment score
+            author_mean_sentiment = (
+                thread_activity["all_activity"][["author", "sentiment_score"]]
+                .groupby("author")
+                .mean()
+                .rename(columns={"sentiment_score": f"mean_author_sentiment"})
+            )
+
+            # combine to form author info df
+            author_info = pd.concat((author_activity, author_mean_sentiment,), axis=1,)
+
+            # convert to dict of mapping dicts to add to thread data from day
+            author_info_maps = author_info.to_dict()
+
+            # map author info to authors in today's thread data and update thread data
+            # with today's author colleciton data
+            for new_col in author_info_maps:
+                day_thread_data[new_col] = day_thread_data.author.map(
+                    author_info_maps[new_col]
+                ).fillna(0)
+                self.thread_data.loc[day_thread_data.index, new_col] = day_thread_data[
+                    new_col
                 ]
 
+        # separate mean author sentiment into mag and sign
+        col = "mean_author_sentiment"
+        if col in self.thread_data.columns:
+            (
+                self.thread_data[f"{col}_sign"],
+                self.thread_data[f"{col}_magnitude"],
+            ) = self.separate_float_into_sign_mag(self.thread_data[col])
+
+        # back to warning
+        pd.options.mode.chained_assignment = "warn"
 
     def main(self):
         """
+        Calculates author count data from thread data with a rolling colleciton window.
+
         For each period:
-        - gets collection period data and regression model data
+        - gets regression model data
         - runs FSS if required and gets sm modstrings
         - iterates through every proposed model:
             - runs logistic regressions
             - calculates metrics required (AIC, BIC, AUC)
         """
+        # get thread author data
+        self.calc_author_thread_counts()
+
         self.period_counter = 1
+
         # iterate through each time period to model
-        for date_index in range(
-            0,
-            len(self.date_array)
-            - (
-                self.regression_params["collection_window"]
-                + self.regression_params["model_window"]
-            ),
-            self.regression_params["step"],
-        ):
+        if "step" in self.regression_params:
+            params = ["collection_window", "model_window"]
+            if "validation_window" in self.regression_params:
+                params += ["validation_window"]
+            windows_sum = np.array([self.regression_params[x] for x in params]).sum()
+            date_indices = range(
+                0, len(self.date_array) - windows_sum, self.regression_params["step"]
+            )
+        else:
+            date_indices = [0]
+
+        for date_index in date_indices:
             print(f"# Period {self.period_counter} #")
 
             # get model data for this period
             self.regression_model_data = self.get_regression_model_data(date_index)
+
+            # get validation data for this period if validation
+            if "validation_window" in self.regression_params:
+                self.validation_data = self.get_regression_model_data(
+                    date_index, calval="val"
+                )
 
             # if need FSS, run FSS for this time period
             if "FSS" in self.regression_params:
@@ -164,8 +297,8 @@ class LogisticRegression():
             for mod_key in self.sm_modstrings:
                 print(f"Model {mod_key}")
                 logit_out_dict = self.run_logit_regression(mod_key)
-                model_results[mod_key] = logit_out_dict["model metrics"]
-                param_dict[mod_key] = logit_out_dict["regression params"]
+                model_results[mod_key] = logit_out_dict["model_metrics"]
+                param_dict[mod_key] = logit_out_dict["regression_params"]
 
             # convert model metrics dict to df
             model_results = pd.DataFrame.from_dict(model_results, orient="index")
@@ -210,6 +343,13 @@ class LogisticRegression():
             )
 
         param_df = pd.DataFrame(logit_model.params).rename(columns={0: mod_key})
+
+        # get test dataset results
+        if "validation_window" in self.regression_params:
+            y_test_prediction = logit_model.predict(exog=self.validation_data)
+            model_results["validation_auc"] = metrics.roc_auc_score(
+                self.validation_data.success, y_test_prediction
+            )
 
         out_dict = {"model_metrics": model_results, "regression_params": param_df}
         return out_dict
@@ -261,9 +401,60 @@ class LogisticRegression():
             i += 1
         return features
 
-    def plot_metrics_vs_features(self, metrics_to_plot, name="", figsize=(7, 7)):
-        """Plot given metrics (aic, roc_auc, bic) on 1 plot.
+    def plot_metrics_vs_features_one_period(
+        self,
+        period,
+        metrics_to_plot,
+        name="",
+        figsize=(7, 7),
+        legend_loc=(1, 1),
+        outfile="",
+    ):
+        """Plot given metrics (aic, auc, bic) on 1 plot for specified model period.
 
+        Parameters
+        ----------
+        period: int
+            model period
+        metrics_to_plot : list(str)
+            list of metrics to plot
+        name : str, optional
+            subreddit name, by default ''
+        figsize : tuple, optional
+            figure size, by default (7,7)
+        """
+        plt_colours = list(mcolors.TABLEAU_COLORS.keys())
+        fig, ax = plt.subplots(1, figsize=figsize)
+
+        ax_list = [ax]
+        if len(metrics_to_plot) > 1:
+            ax_list.append(ax.twinx())
+
+        legend_handles = []
+        for i, metric in enumerate(metrics_to_plot):
+            ax_list[i].plot(
+                self.regression_metrics[period]["metrics"].index,
+                self.regression_metrics[period]["metrics"].loc[:, metric],
+                color=plt_colours[i],
+                label=f"{metric}",
+            )
+            ax_list[i].set_ylabel(metric)
+
+        ax.set_title(
+            f"{name} information criteria vs number of features period {period}"
+        )
+        ax.set_xlabel("Number of features")
+        fig.legend(bbox_to_anchor=legend_loc)
+
+        if outfile:
+            plt.savefig(outfile)
+
+        plt.show()
+
+    def plot_metrics_vs_features_all_periods(
+        self, metrics_to_plot, name="", figsize=(7, 7)
+    ):
+        """Plot given metrics (aic, auc, bic) on 1 plot over all time periods.
         Parameters
         ----------
         metrics_to_plot : list(str)
@@ -286,7 +477,7 @@ class LogisticRegression():
             for i, metric in enumerate(metrics_to_plot):
                 ax_list[i].plot(
                     self.regression_metrics[period]["metrics"].index,
-                    self.regression_metrics[period]["metrics"].loc[:, (period, metric)],
+                    self.regression_metrics[period]["metrics"].loc[:, metric],
                     color=plt_colours[period],
                     linestyle=linestyles[i],
                     label=f"{metric} {period}",
@@ -364,7 +555,7 @@ class LogisticRegression():
         """
         fig, ax = plt.subplots(1, figsize=figsize)
         for period in self.FSS_metrics:
-            x = self.FSS_metrics[period]["metric_df"].number_features
+            x = self.FSS_metrics[period]["metric_df"].index
             y = self.FSS_metrics[period]["metric_df"].avg_score
             ax.plot(x, y, label=period)
         ax.set_title(f"{self.regression_params['name']} Sequential Forward Selection")
@@ -373,44 +564,50 @@ class LogisticRegression():
         fig.tight_layout()
         plt.show()
 
-    def get_regression_model_data(self, date_index):
+    def get_regression_model_data(self, date_index, calval="cal"):
         """Get regression data for model period only, and merge with author data from
-        collection period
+        collection thread data
 
         Parameters
         ----------
         date_index : int
             Index of start date of collection window
+        calval: str
+            Indicates whether the model data is for calibration (uses model window)
+            or validation (uses validation window)
         
         Returns
         -------
         pd.DataFrame
             Regression data that is within model dates, with all required cols
         """
+        start = date_index + self.regression_params["collection_window"]
+        if calval == "cal":
+            end = start + self.regression_params["model_window"]
+        else:
+            start += self.regression_params["model_window"]
+            end = start + self.regression_params["validation_window"]
 
         # find model period dates
-        model_dates = self.date_array[
-            date_index
-            + self.regression_params["collection_window"] : date_index
-            + self.regression_params["collection_window"]
-            + self.regression_params["model_window"]
-        ]
+        model_dates = self.date_array[start:end]
         model_data = self.regression_data[
-            self.regression_data.timestamp.apply(self.get_date).isin(model_dates)
+            self.regression_data.timestamp.apply(TimestampClass.get_date).isin(
+                model_dates
+            )
         ]
 
-        # get author collection period data
-        author_data = self.get_author_collection_data(date_index)
-
-        # combine author collection period data with model data
-        model_data = model_data.merge(author_data.reset_index(), on="author")
-
-        # separate mean author sentiment into mag and sign
-        col = "mean_author_sentiment"
-        (
-            model_data[f"{col}_sign"],
-            model_data[f"{col}_magnitude"],
-        ) = self.separate_float_into_sign_mag(model_data[col])
+        # combine author collection data with model data
+        thread_data_cols = ["id"] + [
+            x for x in self.thread_data.columns if x in self.regression_params["x_cols"]
+        ]
+        if len(thread_data_cols) > 1:
+            model_data = model_data.merge(
+                self.thread_data[thread_data_cols],
+                left_on="thread_id",
+                right_on="id",
+                how="left",
+            )
+            model_data.drop(labels="id", axis=1, inplace=True)
 
         # make other required cols
         for col in [
@@ -419,6 +616,69 @@ class LogisticRegression():
             model_data[col] = model_data.timestamp.apply(self.COLUMN_FUNCTIONS[col])
 
         return model_data
+
+    @staticmethod
+    def params_dict_to_df(params_dict):
+        """Tranforms params dict to params df, ideal for excel output
+
+        Parameters
+        ----------
+        params_dict : dict
+            dictionary of input params
+
+        Returns
+        -------
+        pd.DataFrame
+            params df
+        """
+        # create params df from dict
+        params_df = pd.DataFrame.from_dict(params_dict, orient="index").rename(
+            columns={0: "input"}
+        )
+        params_df.index.name = "param"
+        return params_df
+
+    def output_to_excel(self, outpath, params_to_add={}):
+        """Outputs all regression metrics and params to excel spreadsheet.
+
+        Parameters
+        ----------
+        outpath : str
+            path to xlsx outfile
+        params_to_add: dict
+            Extra params to add to params df (e.g. filenames)
+        """
+        with pd.ExcelWriter(outpath, engine="xlsxwriter") as writer:
+            for key in params_to_add:
+                self.regression_params[key] = params_to_add[key]
+            self.params_dict_to_df(self.regression_params).to_excel(
+                writer, sheet_name="inputs"
+            )
+            if self.regression_params["FSS"]:
+                self.FSS_metrics_df.to_excel(writer, sheet_name="FSS_metrics")
+
+            for period in self.regression_metrics:
+                subreddit_metrics = self.regression_metrics[period]["metrics"]
+                min_subset = [
+                    i
+                    for i in subreddit_metrics.columns
+                    if ((i == "aic") | (i == "bic"))
+                ]
+                max_subset = [
+                    i
+                    for i in subreddit_metrics.columns
+                    if (i == "auc") | (i == "validation_auc")
+                ]
+                (
+                    subreddit_metrics.style.highlight_min(
+                        subset=min_subset, color="green", axis=0
+                    ).highlight_max(subset=max_subset, color="green", axis=0)
+                ).to_excel(writer, sheet_name=f"p{period}_metrics")
+
+                for model in self.regression_metrics[period]["regression_params"]:
+                    self.regression_metrics[period]["regression_params"][
+                        model
+                    ].to_excel(writer, sheet_name=f"p{period}_mod{model}")
 
     @staticmethod
     def get_x_vals_from_modstring(modstring):
@@ -441,8 +701,6 @@ class LogisticRegression():
             array of magnitudes in the column 
         """
         return (np.sign(column), np.absolute(column))
-
-
 
     @staticmethod
     def logit_forward_sequential_selection(X, y, name="", scoring_method="roc_auc"):
@@ -551,7 +809,9 @@ class LogisticRegression():
 
         # get thread data in collection dates
         thread_collection_data = self.thread_data[
-            self.thread_data.timestamp.apply(self.get_date).isin(collection_dates)
+            self.thread_data.timestamp.apply(TimestampClass.get_date).isin(
+                collection_dates
+            )
         ]
 
         # separate by activity
