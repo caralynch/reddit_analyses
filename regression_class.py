@@ -41,6 +41,8 @@ class LogisticRegression:
             'y_col': success column (used when doing FSS),
             'models': models to use (used when not doing FSS)
             'metrics': list of metrics to output (AUC, AIC,...)
+            'activity_threshold': nb of activities per week per author to include
+                                (optional)
         """
 
         # if these cols are required they can be calculated
@@ -77,6 +79,7 @@ class LogisticRegression:
         if "FSS" in regression_params and (regression_params["FSS"] == True):
             self.regression_params["FSS"] = True
             self.FSS_metrics = {}
+            self.FSS_metrics_df = {}
             if "performance_scoring_method" in regression_params:
                 self.regression_params[
                     "performance_scoring_method"
@@ -93,6 +96,15 @@ class LogisticRegression:
         else:
             # if not performing FSS then need models to run
             self.regression_params["models"] = regression_params["models"]
+            # if input model strings, then find the x cols
+            self.regression_params["x_cols"] = self.get_x_vals_from_modstring_dict(
+                self.regression_params["models"]
+            )
+            # assumes only one y val in these models, so just looks at first model to
+            # determine it
+            self.regression_params["y_col"] = self.get_y_from_modstring(
+                list(self.regression_params["models"].values())[0]
+            )
 
         if "metrics" in regression_params:
             self.regression_params["metrics"] = regression_params["metrics"]
@@ -120,8 +132,17 @@ class LogisticRegression:
             else:
                 self.regression_params[window] = regression_params[window]
 
+        # author activity threshold
+        if "activity_threshold" in regression_params:
+            self.regression_params["activity_threshold"] = regression_params[
+                "activity_threshold"
+            ]
+            self.removed_threads = {}
+
         # create dict for info collection
         self.regression_metrics = {}
+        self.model_data = {}
+        self.num_threads_modelled = {}
 
     def calc_author_thread_counts(self):
         """Update thread data df with author activity, post and comment counts. These
@@ -232,6 +253,13 @@ class LogisticRegression:
                     new_col
                 ]
 
+        # get log of author activity if included
+        col = "log_author_all_activity_count"
+        if col in self.regression_params["x_cols"]:
+            self.thread_data["log_author_all_activity_count"] = np.log(
+                self.thread_data.loc[:, "author_all_activity_count"] + 1
+            )
+
         # separate mean author sentiment into mag and sign
         col = "mean_author_sentiment"
         if col in self.thread_data.columns:
@@ -245,7 +273,7 @@ class LogisticRegression:
 
     def main(self):
         """
-        Calculates author count data from thread data with a rolling colleciton window.
+        Calculates author count data from thread data with a rolling collection window.
 
         For each period:
         - gets regression model data
@@ -273,15 +301,16 @@ class LogisticRegression:
 
         for date_index in date_indices:
             print(f"# Period {self.period_counter} #")
+            if "activity_threshold" in self.regression_params:
+                self.removed_threads[self.period_counter] = {}
+            self.model_data[self.period_counter] = {}
 
             # get model data for this period
-            self.regression_model_data = self.get_regression_model_data(date_index)
+            self.get_regression_model_data(date_index)
 
             # get validation data for this period if validation
             if "validation_window" in self.regression_params:
-                self.validation_data = self.get_regression_model_data(
-                    date_index, calval="val"
-                )
+                self.get_regression_model_data(date_index, calval="val")
 
             # if need FSS, run FSS for this time period
             if "FSS" in self.regression_params:
@@ -310,6 +339,121 @@ class LogisticRegression:
 
             self.period_counter += 1
 
+    def get_regression_model_data(self, date_index, calval="cal"):
+        """Get regression data for model period only, and merge with author data from
+        collection thread data
+
+        Parameters
+        ----------
+        date_index : int
+            Index of start date of collection window
+        calval: str
+            Indicates whether the model data is for calibration (uses model window)
+            or validation (uses validation window)
+        
+        Returns
+        -------
+        pd.DataFrame
+            Regression data that is within model dates, with all required cols
+        """
+        start = date_index + self.regression_params["collection_window"]
+        if calval == "cal":
+            end = start + self.regression_params["model_window"]
+        else:
+            # if doing validation, validation window starts after model window
+            start += self.regression_params["model_window"]
+            end = start + self.regression_params["validation_window"]
+
+        # find model period dates
+        model_dates = self.date_array[start:end]
+        model_data = self.regression_data[
+            self.regression_data.timestamp.apply(TimestampClass.get_date).isin(
+                model_dates
+            )
+        ]
+
+        # combine author collection data with model data
+        thread_data_cols = ["id"] + [
+            x for x in self.thread_data.columns if x in self.regression_params["x_cols"]
+        ]
+
+        # need to add author_all_activity_count for filtering purposes if thresholding
+        if ("activity_threshold" in self.regression_params) & (
+            "author_all_activity_count" not in thread_data_cols
+        ):
+            thread_data_cols += ["author_all_activity_count"]
+
+        # only if there are actually thread cols to add (so if considering author
+        # features)
+        if len(thread_data_cols) > 1:
+            model_data = self.merge_author_and_model_data(
+                model_data, thread_data_cols, calval
+            )
+
+        # make other required cols
+        for col in [
+            x for x in self.COLUMN_FUNCTIONS if x in self.regression_params["x_cols"]
+        ]:
+            model_data[col] = model_data.timestamp.apply(self.COLUMN_FUNCTIONS[col])
+
+        self.model_data[self.period_counter][calval] = model_data
+
+        if calval == "cal":
+            self.regression_model_data = model_data
+        else:
+            self.validation_data = model_data
+
+    def merge_author_and_model_data(
+        self, model_data: pd.DataFrame, thread_data_cols: list, calval: str
+    ):
+        """Merges author data calculated with thread_data, with the given model_data.
+        Performs a left hand merge with model data, such that only threads are left.
+        Only merges columns that are specified in the regression params.
+        Also performs author activity thresholding.
+
+        Parameters
+        ----------
+        model_data : pd.DataFrame
+            regression data in model time period
+        thread_data_cols : list
+            list of thread data columns to merge with regression data
+        calval : str
+            whether given data is calibration or validation data
+
+        Returns
+        -------
+        pd.DataFrame
+            model data with required author columns and thresholds applied
+        """
+        model_data = model_data.merge(
+            self.thread_data[thread_data_cols],
+            left_on="thread_id",
+            right_on="id",
+            how="left",
+        )
+
+        # if thresholding by author activity, remove threads where author activity
+        # is less than threshold as these cannot be modelled
+        if "activity_threshold" in self.regression_params:
+            threshold = self.regression_params["activity_threshold"]
+            print(f"Performing thresholding")
+            self.removed_threads[self.period_counter][calval] = model_data.loc[
+                model_data.author_all_activity_count < threshold, :
+            ]
+            model_data = model_data.loc[
+                model_data.author_all_activity_count >= threshold, :
+            ]
+
+        # drop cols unnecessary for modelling
+        to_drop = ["id"]
+        if ("author_all_activity_count" in thread_data_cols) & (
+            "author_all_activity_count" not in self.regression_params["x_cols"]
+        ):
+            to_drop += ["author_all_activity_count"]
+        model_data.drop(labels=to_drop, axis=1, inplace=True)
+
+        return model_data
+
     def run_logit_regression(self, mod_key):
         """Runs logistic regression for given model and updates model result and
         parameters dicts with metrics and regression parameters for given model.
@@ -330,7 +474,15 @@ class LogisticRegression:
         ).fit()
 
         model_results = {}
-        model_results["num_features"] = mod_key
+        if "FSS" in self.regression_params:
+            if self.regression_params["FSS"] == True:
+                model_results["num_features"] = mod_key
+        else:
+            model_results["model_key"] = mod_key
+
+            model_results["num_features"] = len(
+                self.get_x_vals_from_modstring(self.sm_modstrings[mod_key])
+            )
         model_results["model"] = self.sm_modstrings[mod_key]
 
         if "aic" in self.regression_params["metrics"]:
@@ -342,7 +494,12 @@ class LogisticRegression:
                 self.regression_model_data.success, logit_model.predict()
             )
 
-        param_df = pd.DataFrame(logit_model.params).rename(columns={0: mod_key})
+        stderr = pd.Series(
+            np.sqrt(np.diag(logit_model.cov_params())), index=logit_model.params.index
+        )
+        param_df = pd.DataFrame(
+            [logit_model.params, stderr, logit_model.pvalues]
+        ).T.rename(columns={0: "param", 1: "stderr", 2: "pvalue"})
 
         # get test dataset results
         if "validation_window" in self.regression_params:
@@ -401,6 +558,88 @@ class LogisticRegression:
             i += 1
         return features
 
+    def get_num_threads_modelled(self):
+        """Creates df with number of threads modelled and removed for each time
+        period
+        """
+        started = False
+        for period in self.model_data:
+            num_threads_modelled = {}
+            for calval in self.model_data[period]:
+                num_threads_modelled[calval] = {
+                    "modelled_threads": len(self.model_data[period][calval])
+                }
+                if "activity_threshold" in self.regression_params:
+                    num_threads_modelled[calval]["removed_threads"] = len(
+                        self.removed_threads[period][calval]
+                    )
+            df = pd.DataFrame.from_dict(num_threads_modelled)
+            df.columns = pd.MultiIndex.from_product(
+                [[period], df.columns], names=["period", "model"]
+            )
+            if not started:
+                num_threads_modelled_df = df
+                started = True
+            else:
+                num_threads_modelled_df = pd.concat(
+                    (num_threads_modelled_df, df), axis=1
+                )
+
+        self.num_threads_modelled = num_threads_modelled_df.T
+
+    def output_to_excel(self, outpath, params_to_add={}):
+        """Outputs all regression metrics and params to excel spreadsheet.
+
+        Parameters
+        ----------
+        outpath : str
+            path to xlsx outfile
+        params_to_add: dict
+            Extra params to add to params df (e.g. filenames)
+        """
+        with pd.ExcelWriter(outpath, engine="xlsxwriter") as writer:
+            for key in params_to_add:
+                self.regression_params[key] = params_to_add[key]
+            self.params_dict_to_df(self.regression_params).to_excel(
+                writer, sheet_name="inputs"
+            )
+            if "FSS" in self.regression_params:
+                if self.regression_params["FSS"] == True:
+                    if type(self.FSS_metrics_df) is dict:
+                        self.get_FSS_metrics_df()
+                    self.FSS_metrics_df.to_excel(writer, sheet_name="FSS_metrics")
+
+            for period in self.regression_metrics:
+                subreddit_metrics = self.regression_metrics[period]["metrics"]
+                if (
+                    "FSS" not in self.regression_params
+                    or self.regression_params["FSS"] == False
+                ):
+                    subreddit_metrics.sort_values("num_features", inplace=True)
+                min_subset = [
+                    i
+                    for i in subreddit_metrics.columns
+                    if ((i == "aic") | (i == "bic"))
+                ]
+                max_subset = [
+                    i
+                    for i in subreddit_metrics.columns
+                    if (i == "auc") | (i == "validation_auc")
+                ]
+                (
+                    subreddit_metrics.style.highlight_min(
+                        subset=min_subset, color="green", axis=0
+                    ).highlight_max(subset=max_subset, color="green", axis=0)
+                ).to_excel(writer, sheet_name=f"p{period}_metrics", index=False)
+                if type(self.num_threads_modelled) is dict:
+                    self.get_num_threads_modelled()
+                self.num_threads_modelled.to_excel(writer, sheet_name=f"thread_counts")
+
+                for model in self.regression_metrics[period]["regression_params"]:
+                    self.regression_metrics[period]["regression_params"][
+                        model
+                    ].to_excel(writer, sheet_name=f"p{period}_mod{model}")
+
     def plot_metrics_vs_features_one_period(
         self,
         period,
@@ -409,6 +648,7 @@ class LogisticRegression:
         figsize=(7, 7),
         legend_loc=(1, 1),
         outfile="",
+        xlabel="Number of features",
     ):
         """Plot given metrics (aic, auc, bic) on 1 plot for specified model period.
 
@@ -443,7 +683,7 @@ class LogisticRegression:
         ax.set_title(
             f"{name} information criteria vs number of features period {period}"
         )
-        ax.set_xlabel("Number of features")
+        ax.set_xlabel(xlabel)
         fig.legend(bbox_to_anchor=legend_loc)
 
         if outfile:
@@ -489,33 +729,6 @@ class LogisticRegression:
         ax.set_xlabel("Number of features")
 
         plt.show()
-
-    @staticmethod
-    def get_sm_modstrings(x_list_dict: dict, y: str):
-        """With a dictionary of lists of X col names, and string of y col name, makes
-        the statsmodels (r-style) string model identifiers
-
-        Parameters
-        ----------
-        x_list_dict : dict
-            Dictionary of lists of x col names
-        y : str
-            name of y col
-
-        Returns
-        -------
-        dict
-            dictionary of strings of model names
-        """
-        models = {}
-
-        for feat_num in x_list_dict:
-            models[feat_num] = f"{y} ~"
-            for i, feat_name in enumerate(x_list_dict[feat_num]):
-                if i != 0:
-                    models[feat_num] += " +"
-                models[feat_num] += f" {feat_name}"
-        return models
 
     def get_FSS_metrics_df(self):
         """Extracts FSS metrics df for all time periods from FSS metrics dict.
@@ -564,59 +777,6 @@ class LogisticRegression:
         fig.tight_layout()
         plt.show()
 
-    def get_regression_model_data(self, date_index, calval="cal"):
-        """Get regression data for model period only, and merge with author data from
-        collection thread data
-
-        Parameters
-        ----------
-        date_index : int
-            Index of start date of collection window
-        calval: str
-            Indicates whether the model data is for calibration (uses model window)
-            or validation (uses validation window)
-        
-        Returns
-        -------
-        pd.DataFrame
-            Regression data that is within model dates, with all required cols
-        """
-        start = date_index + self.regression_params["collection_window"]
-        if calval == "cal":
-            end = start + self.regression_params["model_window"]
-        else:
-            start += self.regression_params["model_window"]
-            end = start + self.regression_params["validation_window"]
-
-        # find model period dates
-        model_dates = self.date_array[start:end]
-        model_data = self.regression_data[
-            self.regression_data.timestamp.apply(TimestampClass.get_date).isin(
-                model_dates
-            )
-        ]
-
-        # combine author collection data with model data
-        thread_data_cols = ["id"] + [
-            x for x in self.thread_data.columns if x in self.regression_params["x_cols"]
-        ]
-        if len(thread_data_cols) > 1:
-            model_data = model_data.merge(
-                self.thread_data[thread_data_cols],
-                left_on="thread_id",
-                right_on="id",
-                how="left",
-            )
-            model_data.drop(labels="id", axis=1, inplace=True)
-
-        # make other required cols
-        for col in [
-            x for x in self.COLUMN_FUNCTIONS if x in self.regression_params["x_cols"]
-        ]:
-            model_data[col] = model_data.timestamp.apply(self.COLUMN_FUNCTIONS[col])
-
-        return model_data
-
     @staticmethod
     def params_dict_to_df(params_dict):
         """Tranforms params dict to params df, ideal for excel output
@@ -638,51 +798,48 @@ class LogisticRegression:
         params_df.index.name = "param"
         return params_df
 
-    def output_to_excel(self, outpath, params_to_add={}):
-        """Outputs all regression metrics and params to excel spreadsheet.
-
-        Parameters
-        ----------
-        outpath : str
-            path to xlsx outfile
-        params_to_add: dict
-            Extra params to add to params df (e.g. filenames)
-        """
-        with pd.ExcelWriter(outpath, engine="xlsxwriter") as writer:
-            for key in params_to_add:
-                self.regression_params[key] = params_to_add[key]
-            self.params_dict_to_df(self.regression_params).to_excel(
-                writer, sheet_name="inputs"
-            )
-            if self.regression_params["FSS"]:
-                self.FSS_metrics_df.to_excel(writer, sheet_name="FSS_metrics")
-
-            for period in self.regression_metrics:
-                subreddit_metrics = self.regression_metrics[period]["metrics"]
-                min_subset = [
-                    i
-                    for i in subreddit_metrics.columns
-                    if ((i == "aic") | (i == "bic"))
-                ]
-                max_subset = [
-                    i
-                    for i in subreddit_metrics.columns
-                    if (i == "auc") | (i == "validation_auc")
-                ]
-                (
-                    subreddit_metrics.style.highlight_min(
-                        subset=min_subset, color="green", axis=0
-                    ).highlight_max(subset=max_subset, color="green", axis=0)
-                ).to_excel(writer, sheet_name=f"p{period}_metrics")
-
-                for model in self.regression_metrics[period]["regression_params"]:
-                    self.regression_metrics[period]["regression_params"][
-                        model
-                    ].to_excel(writer, sheet_name=f"p{period}_mod{model}")
-
     @staticmethod
     def get_x_vals_from_modstring(modstring):
         return [x.strip() for x in modstring.split("~")[1].split("+")]
+
+    @staticmethod
+    def get_y_from_modstring(modstring):
+        return modstring.split("~")[0].strip()
+
+    @classmethod
+    def get_x_vals_from_modstring_dict(cls, modstring_dict):
+        mod_list = []
+        for modstring in modstring_dict.values():
+            mod_list += cls.get_x_vals_from_modstring(modstring)
+
+        return list(set(mod_list))
+
+    @staticmethod
+    def get_sm_modstrings(x_list_dict: dict, y: str):
+        """With a dictionary of lists of X col names, and string of y col name, makes
+        the statsmodels (r-style) string model identifiers
+
+        Parameters
+        ----------
+        x_list_dict : dict
+            Dictionary of lists of x col names
+        y : str
+            name of y col
+
+        Returns
+        -------
+        dict
+            dictionary of strings of model names
+        """
+        models = {}
+
+        for feat_num in x_list_dict:
+            models[feat_num] = f"{y} ~"
+            for i, feat_name in enumerate(x_list_dict[feat_num]):
+                if i != 0:
+                    models[feat_num] += " +"
+                models[feat_num] += f" {feat_name}"
+        return models
 
     @staticmethod
     def separate_float_into_sign_mag(column: pd.Series):
