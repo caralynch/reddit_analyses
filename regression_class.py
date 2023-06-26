@@ -30,6 +30,7 @@ class LogisticRegression:
             'name': ideally subreddit name
             'regression_data': df of regression data,
             'thread_data': df of thread data,
+            'model': str indicating whether logistic or linear regression
             'collection_window': size of data collection window (used to calc author
                 stats), in days,
             'model_window': size of modelling window in days,
@@ -85,7 +86,10 @@ class LogisticRegression:
                     "performance_scoring_method"
                 ] = regression_params["performance_scoring_method"]
             else:
-                self.regression_params["performance_scoring_method"] = "roc_auc"
+                if 'model' not in regression_params | regression_params['model']=='logistic':
+                    self.regression_params["performance_scoring_method"] = "roc_auc"
+                else:
+                    self.regression_params["performance_scoring_method"] = "r2"
 
             # if performing FSS then need x and y cols
             self.regression_params["x_cols"] = regression_params["x_cols"]
@@ -110,6 +114,11 @@ class LogisticRegression:
             self.regression_params["metrics"] = regression_params["metrics"]
         else:
             self.regression_params["metrics"] = ["roc_auc"]
+        
+        if 'model' not in regression_params | regression_params['model']=='logistic':
+            self.regression_params['model'] = 'logistic'
+        else:
+            self.regression_params['model'] = 'linear'
 
         # get array of dates in dataset
         date_array = self.thread_data.timestamp.apply(TimestampClass.get_date).unique()
@@ -520,7 +529,7 @@ class LogisticRegression:
         Dict
             dictionary of model strings from FSS
         """
-        self.FSS_metrics[self.period_counter] = self.logit_forward_sequential_selection(
+        self.FSS_metrics[self.period_counter] = self.forward_sequential_selection(
             self.regression_model_data[self.regression_params["x_cols"]],
             self.regression_model_data[self.regression_params["y_col"]],
             name=f"{self.regression_params['name']}_period_{self.period_counter}",
@@ -860,7 +869,8 @@ class LogisticRegression:
         return (np.sign(column), np.absolute(column))
 
     @staticmethod
-    def logit_forward_sequential_selection(X, y, name="", scoring_method="roc_auc"):
+    def forward_sequential_selection(X, y, name="", scoring_method="roc_auc",
+                                           model=linear_model.LogisticRegression()):
         """Performs forward sequential selection given df of X values to consider
         for features, y column name, an optional name of the data, and scoring method.
 
@@ -875,6 +885,9 @@ class LogisticRegression:
             Name of given data, by default ''
         scoring_method : str, optional
             Method to use to find best model, by default 'roc_auc'
+        model: linear_model class
+            Regression model to use (logistic or OLS linear), by default
+            linear_model.LogisticRegression()
 
         Returns
         -------
@@ -887,7 +900,7 @@ class LogisticRegression:
         k = (1, max_k)
 
         sfs = SequentialFeatureSelector(
-            linear_model.LogisticRegression(),
+            model,
             k_features=k,
             forward=True,
             scoring=scoring_method,
