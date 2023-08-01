@@ -1,0 +1,11 @@
+,parameter,input
+0,regression_infile,regression_thread_data.p
+1,thread_infile,clean_5_thread_data.p
+2,FSS_outfile,weekly_FSS.xlsx
+3,FSS metrics pickle out,weekly_FSS_metrics.p
+4,collection window,7
+5,model window,7
+6,step,7
+7,performance scoring method,roc_auc
+8,x cols,"['sentiment_sign', 'sentiment_magnitude', 'author_all_activity_count', 'hour', 'time_in_secs', 'num_dayofweek', 'activity_ratio', 'mean_author_sentiment_sign', 'mean_author_sentiment_magnitude']"
+9,y col,success

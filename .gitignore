@@ -7,3 +7,4 @@
 /neutral_sentiment_activities/*
 !/feature_selection_*
 !*regression_data.p
+*.pyc

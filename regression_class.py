@@ -19,7 +19,7 @@ from mlxtend.feature_selection import SequentialFeatureSelector
 from mlxtend.plotting import plot_sequential_feature_selection as plot_sfs
 
 
-class LogisticRegression:
+class RedditRegression:
     def __init__(self, regression_params: dict):
         """Initialise regression data class
 
@@ -30,7 +30,7 @@ class LogisticRegression:
             'name': ideally subreddit name
             'regression_data': df of regression data,
             'thread_data': df of thread data,
-            'model': str indicating whether logistic or linear regression
+            'regression_type': str indicating whether logistic or linear regression
             'collection_window': size of data collection window (used to calc author
                 stats), in days,
             'model_window': size of modelling window in days,
@@ -51,6 +51,13 @@ class LogisticRegression:
             "time_in_secs": TimestampClass.get_float_seconds,
             "num_dayofweek": TimestampClass.get_dayofweek,
             "hour": TimestampClass.get_hour,
+        }
+
+        self.SMF_FUNCTIONS = {"logistic": "logit", "linear": "ols"}
+
+        self.SKL_FUNCTIONS = {
+            "logistic": linear_model.LogisticRegression(),
+            "linear": linear_model.LinearRegression(),
         }
 
         self.regression_params = {}
@@ -77,6 +84,9 @@ class LogisticRegression:
         else:
             self.regression_params["name"] = ""
 
+        if "regression_type" not in regression_params:
+            regression_params["regression_type"] = "logistic"
+
         if "FSS" in regression_params and (regression_params["FSS"] == True):
             self.regression_params["FSS"] = True
             self.FSS_metrics = {}
@@ -86,7 +96,7 @@ class LogisticRegression:
                     "performance_scoring_method"
                 ] = regression_params["performance_scoring_method"]
             else:
-                if 'model' not in regression_params | regression_params['model']=='logistic':
+                if regression_params["regression_type"] == "logistic":
                     self.regression_params["performance_scoring_method"] = "roc_auc"
                 else:
                     self.regression_params["performance_scoring_method"] = "r2"
@@ -104,21 +114,27 @@ class LogisticRegression:
             self.regression_params["x_cols"] = self.get_x_vals_from_modstring_dict(
                 self.regression_params["models"]
             )
-            # assumes only one y val in these models, so just looks at first model to
-            # determine it
-            self.regression_params["y_col"] = self.get_y_from_modstring(
-                list(self.regression_params["models"].values())[0]
+            # determine y vals
+            y_cols = list(
+                set(
+                    [
+                        self.get_y_from_modstring(i)
+                        for i in list(self.regression_params["models"].values())
+                    ]
+                )
             )
+            if len(y_cols) == 1:
+                self.regression_params["y_col"] = y_cols[0]
+            else:
+                self.regression_params["y_col"] = y_cols
 
         if "metrics" in regression_params:
             self.regression_params["metrics"] = regression_params["metrics"]
         else:
             self.regression_params["metrics"] = ["roc_auc"]
-        
-        if 'model' not in regression_params | regression_params['model']=='logistic':
-            self.regression_params['model'] = 'logistic'
-        else:
-            self.regression_params['model'] = 'linear'
+
+        # model type assigns model function to use
+        self.regression_params["regression_type"] = regression_params["regression_type"]
 
         # get array of dates in dataset
         date_array = self.thread_data.timestamp.apply(TimestampClass.get_date).unique()
@@ -334,9 +350,9 @@ class LogisticRegression:
             param_dict = {}
             for mod_key in self.sm_modstrings:
                 print(f"Model {mod_key}")
-                logit_out_dict = self.run_logit_regression(mod_key)
-                model_results[mod_key] = logit_out_dict["model_metrics"]
-                param_dict[mod_key] = logit_out_dict["regression_params"]
+                regression_out_dict = self.run_regression(mod_key)
+                model_results[mod_key] = regression_out_dict["model_metrics"]
+                param_dict[mod_key] = regression_out_dict["regression_params"]
 
             # convert model metrics dict to df
             model_results = pd.DataFrame.from_dict(model_results, orient="index")
@@ -463,7 +479,7 @@ class LogisticRegression:
 
         return model_data
 
-    def run_logit_regression(self, mod_key):
+    def run_regression(self, mod_key):
         """Runs logistic regression for given model and updates model result and
         parameters dicts with metrics and regression parameters for given model.
 
@@ -478,8 +494,10 @@ class LogisticRegression:
         Dict
             With 'model metrics' and 'regression params' keys
         """
-        logit_model = smf.logit(
-            self.sm_modstrings[mod_key], data=self.regression_model_data
+        smf_model = (
+            getattr(smf, self.SMF_FUNCTIONS[self.regression_params["regression_type"]])(
+                self.sm_modstrings[mod_key], data=self.regression_model_data
+            )
         ).fit()
 
         model_results = {}
@@ -494,28 +512,37 @@ class LogisticRegression:
             )
         model_results["model"] = self.sm_modstrings[mod_key]
 
-        if "aic" in self.regression_params["metrics"]:
-            model_results["aic"] = logit_model.aic
-        if "bic" in self.regression_params["metrics"]:
-            model_results["bic"] = logit_model.bic
-        if "roc_auc" in self.regression_params["metrics"]:
-            model_results["auc"] = metrics.roc_auc_score(
-                self.regression_model_data.success, logit_model.predict()
-            )
+        SMF_PARAMS_LOOKUP = {
+            "aic": "aic",
+            "bic": "bic",
+            "r2": "rsquared",
+        }
+        for metric in self.regression_params["metrics"]:
+            if metric == "roc_auc":
+                model_results["auc"] = metrics.roc_auc_score(
+                    self.regression_model_data.success, smf_model.predict()
+                )
+            else:
+                model_results[metric] = getattr(smf_model, SMF_PARAMS_LOOKUP[metric])
 
         stderr = pd.Series(
-            np.sqrt(np.diag(logit_model.cov_params())), index=logit_model.params.index
+            np.sqrt(np.diag(smf_model.cov_params())), index=smf_model.params.index
         )
-        param_df = pd.DataFrame(
-            [logit_model.params, stderr, logit_model.pvalues]
-        ).T.rename(columns={0: "param", 1: "stderr", 2: "pvalue"})
+        param_df = pd.DataFrame([smf_model.params, stderr, smf_model.pvalues]).T.rename(
+            columns={0: "param", 1: "stderr", 2: "pvalue"}
+        )
 
         # get test dataset results
         if "validation_window" in self.regression_params:
-            y_test_prediction = logit_model.predict(exog=self.validation_data)
-            model_results["validation_auc"] = metrics.roc_auc_score(
-                self.validation_data.success, y_test_prediction
-            )
+            y_test_prediction = smf_model.predict(exog=self.validation_data)
+            if "roc_auc" in self.regression_params["metrics"]:
+                model_results["validation_auc"] = metrics.roc_auc_score(
+                    self.validation_data.success, y_test_prediction
+                )
+            else:
+                model_results["validation_r2"] = metrics.r2_score(
+                    self.validation_data.success, y_test_prediction
+                )
 
         out_dict = {"model_metrics": model_results, "regression_params": param_df}
         return out_dict
@@ -534,6 +561,7 @@ class LogisticRegression:
             self.regression_model_data[self.regression_params["y_col"]],
             name=f"{self.regression_params['name']}_period_{self.period_counter}",
             scoring_method=self.regression_params["performance_scoring_method"],
+            model=self.SKL_FUNCTIONS[self.regression_params["regression_type"]],
         )
         return self.get_modstrings_from_FSS()
 
@@ -655,9 +683,10 @@ class LogisticRegression:
         metrics_to_plot,
         name="",
         figsize=(7, 7),
-        legend_loc=(1, 1),
+        legend_loc=(0.9, 0.83),
         outfile="",
         xlabel="Number of features",
+        show=True
     ):
         """Plot given metrics (aic, auc, bic) on 1 plot for specified model period.
 
@@ -697,8 +726,10 @@ class LogisticRegression:
 
         if outfile:
             plt.savefig(outfile)
-
-        plt.show()
+        if show:
+            plt.show()
+        else:
+            plt.clf()
 
     def plot_metrics_vs_features_all_periods(
         self, metrics_to_plot, name="", figsize=(7, 7)
@@ -869,8 +900,9 @@ class LogisticRegression:
         return (np.sign(column), np.absolute(column))
 
     @staticmethod
-    def forward_sequential_selection(X, y, name="", scoring_method="roc_auc",
-                                           model=linear_model.LogisticRegression()):
+    def forward_sequential_selection(
+        X, y, name="", scoring_method="roc_auc", model=linear_model.LogisticRegression()
+    ):
         """Performs forward sequential selection given df of X values to consider
         for features, y column name, an optional name of the data, and scoring method.
 
@@ -900,11 +932,7 @@ class LogisticRegression:
         k = (1, max_k)
 
         sfs = SequentialFeatureSelector(
-            model,
-            k_features=k,
-            forward=True,
-            scoring=scoring_method,
-            cv=None,
+            model, k_features=k, forward=True, scoring=scoring_method, cv=None,
         )
 
         selected_features = sfs.fit(X, y)
