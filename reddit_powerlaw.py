@@ -102,7 +102,7 @@ class RedditPowerlaw:
         candidate_params.drop(labels=to_remove, inplace=True)
         self.candidate_params = candidate_params
 
-    def plot_fits(self, x_label: str, y_label: str, distributions=[], outfile=None):
+    def plot_fits(self, x_label: str, y_label: str, distributions=[], outfile=None, suptitle=None):
         """Plot data with best fit distributions
 
         Parameters
@@ -116,6 +116,8 @@ class RedditPowerlaw:
             default []
         outfile : str, optional
             name of file to save plot to, by default None
+        suptitle: str, optional
+            figure suptitle, by default None
         """
         if not distributions:
             if not self.candidate_distributions:
@@ -155,7 +157,9 @@ class RedditPowerlaw:
             labels += ax_labels
         labels_dict = dict(zip(labels, handles))
         fig.legend(labels_dict.values(), labels_dict.keys(), loc="upper right")
-        if self.name:
+        if suptitle:
+            fig.suptitle(suptitle)
+        elif self.name:
             fig.suptitle(f"{self.name}")
         fig.get_tight_layout()
 
