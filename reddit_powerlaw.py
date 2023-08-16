@@ -30,7 +30,7 @@ class RedditPowerlaw:
         self.candidate_distributions = []
         self.significance_df = pd.DataFrame()
         self.candidate_params = pd.DataFrame()
-        self.name = None
+        self.name = name
 
     def find_candidate_distributions(self):
         """Cycle through list of supported distributions to find best fit
