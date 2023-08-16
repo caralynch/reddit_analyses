@@ -90,16 +90,22 @@ class RedditPowerlaw:
         candidate_params = pd.concat(distribution_dfs, axis=1)
         candidate_params.dropna(axis=0, how="all", inplace=True)
         candidate_params.drop(labels="parent_Fit", inplace=True)
+        
+        """ removing as this removed stuff from the plain power_law fit
         param_rows = [
             x for x in candidate_params.index if (("parameter" in x) & ("name" in x))
         ]
+        
         to_remove = []
         for row in param_rows:
             to_remove += list(candidate_params.loc[row, :].values)
         to_remove = list(dict.fromkeys(to_remove))
+        if None in to_remove:
+            to_remove.remove(None)
         if "lambda" in to_remove:
             to_remove = list(map(lambda x: x.replace("lambda", "Lambda"), to_remove))
         candidate_params.drop(labels=to_remove, inplace=True)
+        """
         self.candidate_params = candidate_params
 
     def plot_fits(self, x_label: str, y_label: str, distributions=[], outfile=None, suptitle=None):
@@ -124,8 +130,7 @@ class RedditPowerlaw:
                 self.find_candidate_distributions()
             distributions = self.candidate_distributions
         plots = [x for x in dir(self.fit) if "plot" in x]
-        NAMES = ["PDF", "CDF", "CCDF"]
-        NAMES = dict(zip(plots, NAMES))
+        NAMES = {'plot_pdf': 'PDF', 'plot_cdf': 'CDF', 'plot_ccdf': 'CCDF'}
         COLOURS = {
             "original data": "darkred",
             "data": "black",
