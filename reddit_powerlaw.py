@@ -81,8 +81,12 @@ class RedditPowerlaw:
 
         distribution_dfs = []
         for distribution in distributions:
+            distribution_dict = self.fit.__dict__[distribution].__dict__
+            if distribution == 'power_law':
+                distribution_dict['parameter1'] = distribution_dict['alpha']
+                distribution_dict['parameter1_name'] = 'alpha'
             distribution_data = pd.DataFrame.from_dict(
-                self.fit.__dict__[distribution].__dict__,
+                distribution_dict,
                 orient="index",
                 columns=[distribution],
             )
@@ -90,8 +94,10 @@ class RedditPowerlaw:
         candidate_params = pd.concat(distribution_dfs, axis=1)
         candidate_params.dropna(axis=0, how="all", inplace=True)
         candidate_params.drop(labels="parent_Fit", inplace=True)
+
+
         
-        """ removing as this removed stuff from the plain power_law fit
+        # removing as this removed stuff from the plain power_law fit
         param_rows = [
             x for x in candidate_params.index if (("parameter" in x) & ("name" in x))
         ]
@@ -105,7 +111,7 @@ class RedditPowerlaw:
         if "lambda" in to_remove:
             to_remove = list(map(lambda x: x.replace("lambda", "Lambda"), to_remove))
         candidate_params.drop(labels=to_remove, inplace=True)
-        """
+        
         self.candidate_params = candidate_params
 
     def plot_fits(self, x_label: str, y_label: str, distributions=[], outfile=None, suptitle=None):
