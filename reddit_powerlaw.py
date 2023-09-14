@@ -9,10 +9,19 @@ from statistics import mean
 from matplotlib import pyplot as plt
 from matplotlib import dates
 
+
 class RedditPowerlaw:
     """Class to perform power-law analyses of reddit data.
     """
-    def __init__(self, data, significant_fit_param=0.05, name=None, **kwargs) -> None:
+
+    def __init__(
+        self,
+        data,
+        significant_fit_param=0.05,
+        name=None,
+        candidate_distributions=[],
+        **kwargs,
+    ) -> None:
         """Initialise a class instance
 
         Parameters
@@ -23,11 +32,13 @@ class RedditPowerlaw:
             Significant fit parameter, by default 0.05
         name : str, optional
             Name of data, by default None
+        candidate_distributions: list, optional
+            Candidate distributions to use for fitting, by default empty list
         """
         self.data = data
         self.fit = pl.Fit(data, **kwargs)
         self.significant_fit_param = significant_fit_param
-        self.candidate_distributions = []
+        self.candidate_distributions = candidate_distributions
         self.significance_df = pd.DataFrame()
         self.candidate_params = pd.DataFrame()
         self.name = name
@@ -82,26 +93,22 @@ class RedditPowerlaw:
         distribution_dfs = []
         for distribution in distributions:
             distribution_dict = self.fit.__dict__[distribution].__dict__
-            if distribution == 'power_law':
-                distribution_dict['parameter1'] = distribution_dict['alpha']
-                distribution_dict['parameter1_name'] = 'alpha'
+            if distribution == "power_law":
+                distribution_dict["parameter1"] = distribution_dict["alpha"]
+                distribution_dict["parameter1_name"] = "alpha"
             distribution_data = pd.DataFrame.from_dict(
-                distribution_dict,
-                orient="index",
-                columns=[distribution],
+                distribution_dict, orient="index", columns=[distribution],
             )
             distribution_dfs.append(distribution_data)
         candidate_params = pd.concat(distribution_dfs, axis=1)
         candidate_params.dropna(axis=0, how="all", inplace=True)
         candidate_params.drop(labels="parent_Fit", inplace=True)
 
-
-        
         # removing as this removed stuff from the plain power_law fit
         param_rows = [
             x for x in candidate_params.index if (("parameter" in x) & ("name" in x))
         ]
-        
+
         to_remove = []
         for row in param_rows:
             to_remove += list(candidate_params.loc[row, :].values)
@@ -111,10 +118,18 @@ class RedditPowerlaw:
         if "lambda" in to_remove:
             to_remove = list(map(lambda x: x.replace("lambda", "Lambda"), to_remove))
         candidate_params.drop(labels=to_remove, inplace=True)
-        
+
         self.candidate_params = candidate_params
 
-    def plot_fits(self, x_label: str, y_label: str, distributions=[], outfile=None, suptitle=None):
+    def plot_fits(
+        self,
+        x_label: str,
+        y_label: str,
+        plots=["plot_pdf", "plot_cdf", "plot_ccdf"],
+        distributions=[],
+        outfile=None,
+        suptitle=None,
+    ):
         """Plot data with best fit distributions
 
         Parameters
@@ -135,8 +150,8 @@ class RedditPowerlaw:
             if not self.candidate_distributions:
                 self.find_candidate_distributions()
             distributions = self.candidate_distributions
-        plots = [x for x in dir(self.fit) if "plot" in x]
-        NAMES = {'plot_pdf': 'PDF', 'plot_cdf': 'CDF', 'plot_ccdf': 'CCDF'}
+        # plots = [x for x in dir(self.fit) if "plot" in x]
+        NAMES = {"plot_pdf": "PDF", "plot_cdf": "CDF", "plot_ccdf": "CCDF"}
         COLOURS = {
             "original data": "darkred",
             "data": "black",
@@ -144,26 +159,31 @@ class RedditPowerlaw:
             "truncated_power_law": "green",
             "stretched_exponential": "darkorchid",
             "lognormal_positive": "teal",
-            'power_law': "darkred",
+            "power_law": "darkred",
         }
-        fig, axs = plt.subplots(1, 3, figsize=(21, 7))
+        num_plots = len(plots)
+        fig, axs = plt.subplots(1, num_plots, figsize=(7 * num_plots, 7))
         handles = []
         labels = []
+        if num_plots == 1:
+            axes = [axs]
+        else:
+            axes = axs
         for i, plot_function in enumerate(plots):
             getattr(self.fit, plot_function)(
-                ax=axs[i], color=COLOURS["data"], label="data"
+                ax=axes[i], color=COLOURS["data"], label="data"
             )
             for fit_function in distributions:
                 getattr(getattr(self.fit, fit_function), plot_function)(
-                    ax=axs[i],
+                    ax=axes[i],
                     color=COLOURS[fit_function],
                     linestyle="dashed",
                     label=f"{fit_function}",
                 )
-            axs[i].set_title(f"{NAMES[plot_function]}")
-            axs[i].set_xlabel(f"{x_label}")
-            axs[i].set_ylabel(f"{y_label} {plot_function}")
-            ax_handles, ax_labels = axs[i].get_legend_handles_labels()
+            axes[i].set_title(f"{NAMES[plot_function]}")
+            axes[i].set_xlabel(f"{x_label}")
+            axes[i].set_ylabel(f"{y_label} {plot_function}")
+            ax_handles, ax_labels = axes[i].get_legend_handles_labels()
             handles += ax_handles
             labels += ax_labels
         labels_dict = dict(zip(labels, handles))
