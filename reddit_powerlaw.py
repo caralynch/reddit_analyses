@@ -96,6 +96,7 @@ class RedditPowerlaw:
             if distribution == "power_law":
                 distribution_dict["parameter1"] = distribution_dict["alpha"]
                 distribution_dict["parameter1_name"] = "alpha"
+                distribution_dict["sigma"] = self.fit.__dict__[distribution].sigma
             distribution_data = pd.DataFrame.from_dict(
                 distribution_dict, orient="index", columns=[distribution],
             )
