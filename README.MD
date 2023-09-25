@@ -33,6 +33,9 @@
 - combine any data that needs combining
 - identify most active authors and check whether bots or not
 - remove spam
+
+
+
 Outputs: `datasets.p`, `cleaned_datasets.p`
 ## 2. Perform sentiment analysis `2_sentiment_analysis.py` - **DONE**
 Outputs: `sentiment_datasets.p`
@@ -76,14 +79,14 @@ check report graphs
 - `thread_lvls_info.p`
     
 ### Unsuccessful threads `7_unsuccessful_thread_characteristics.ipynb`
-- see `threads_that_die.ipnb`
+- see `threads_that_die.ipynb`
 - proportion of unsuccessful threads
 - sentiment distribution of successful vs unsuccessful threads
 - time of day of successful vs unsuccessful thread activity + 2-sided K-S test
 - average sentiment over time of s vs uns threads
     - hourly
 #### To do:
-    - sentiment per chunk of time & day of week
+- sentiment per chunk of time & day of week
 
 ### Outputs
 Added to `failed_threads` sheet of `dataset_summaries.ods`:
