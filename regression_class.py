@@ -325,7 +325,7 @@ class RedditRegression:
             date_indices = [0]
 
         for date_index in date_indices:
-            print(f"# Period {self.period_counter} #")
+            #print(f"# Period {self.period_counter} #")
             if "activity_threshold" in self.regression_params:
                 self.removed_threads[self.period_counter] = {}
             self.model_data[self.period_counter] = {}
@@ -461,7 +461,7 @@ class RedditRegression:
         # is less than threshold as these cannot be modelled
         if "activity_threshold" in self.regression_params:
             threshold = self.regression_params["activity_threshold"]
-            print(f"Performing thresholding")
+            #print(f"Performing thresholding")
             self.removed_threads[self.period_counter][calval] = model_data.loc[
                 model_data.author_all_activity_count < threshold, :
             ]
