@@ -5,6 +5,10 @@ import os
 # custom imports
 from regression_class import RedditRegression as RR
 
+# time tracking
+from datetime import datetime as dt
+
+print(f"Start time {print(dt.now())}")
 
 # infiles
 regression_infile = "regression_thread_data.p"
@@ -42,7 +46,8 @@ outdir_names = {}
 # make out params dict to save spreadsheets
 out_params_dict = {}
 
-print('Making regression params dictionaries')
+print(dt.now())
+print("Making regression params dictionaries")
 for activity_threshold_size in activity_thresholds:
     regression_params_dict[activity_threshold_size] = {}
     out_params_dict[activity_threshold_size] = {}
@@ -61,7 +66,6 @@ for activity_threshold_size in activity_thresholds:
             "y_col": "success",
             "metrics": ["roc_auc", "aic"],
             "activity_threshold": activity_threshold_size,
-            "FSS": True,
         }
         out_params_dict[activity_threshold_size][collection_window_size] = {
             "regression_infile": regression_infile,
@@ -74,21 +78,22 @@ for outdirname in [outdir] + list(outdir_names.values()):
         os.mkdir(outdirname)
 
 # read in files
-print('reading in input files')
+print(dt.now())
+print("reading in input files")
 regression_df = pickle.load(open(regression_infile, "rb"))
 thread_df = pickle.load(open(thread_infile, "rb"))
 
-# place to store logregs
-subreddit_logregs = {}
-
-print('\nSTARTING REGRESSIONS')
+print(dt.now())
+print("\nSTARTING REGRESSIONS")
 # go through activity thresholds, collection windows and subreddits
 for activity_threshold_size in regression_params_dict:
-    print(f"    ###activity_threshold: {activity_threshold_size}###")
-    subreddit_logregs[activity_threshold_size] = {}
+    print(dt.now())
+    print(f"\n    ###activity_threshold: {activity_threshold_size}###")
     for collection_window_size in regression_params_dict[activity_threshold_size]:
-        print(f"    ##collection window: {collection_window_size}##")
-        subreddit_logregs[activity_threshold_size][collection_window_size] = {}
+        print(dt.now())
+        print(f"\n    ##collection window: {collection_window_size}##")
+        # place to store logregs
+        subreddit_logregs = {}
         for subreddit in subreddits:
             print(f"#{subreddit}#")
             regression_params_dict[activity_threshold_size][collection_window_size][
@@ -101,26 +106,33 @@ for activity_threshold_size in regression_params_dict:
                 "thread_data"
             ] = thread_df[subreddit]
 
-            subreddit_logregs[activity_threshold_size][collection_window_size][
-                subreddit
-            ] = RR(
+            subreddit_logregs[subreddit] = RR(
                 regression_params=regression_params_dict[activity_threshold_size][
                     collection_window_size
                 ]
             )
 
-            subreddit_logregs[activity_threshold_size][collection_window_size][
-                subreddit
-            ].main()
+            subreddit_logregs[subreddit].main()
 
-
-print('SAVING OUTFILES')
-# output all files for further analyses in notebook
-to_output = {
-    "logregs": subreddit_logregs,
-    "regression_params": regression_params_dict,
-    "out_params": out_params_dict,
-    "subdirs": outdir_names,
-    "outdir": outdir,
-}
-pickle.dump(to_output, open(f"{outdir}/logregs_pickle.p", "wb"))
+        # dump pickle results
+        outstring = (
+            f"{outdir_names[activity_threshold_size][collection_window_size]}/"
+            + f"logregs_a_{activity_threshold_size}_"
+            + f"c_{collection_window_size}.p"
+        )
+        print(dt.now())
+        print(f"\n\n\n   DUMPING RESULTS TO \n{outstring}\n\n\n")
+        to_output = {
+            "logregs": subreddit_logregs,
+            "regression_params": regression_params_dict[activity_threshold_size][
+                collection_window_size
+            ],
+            "out_params": out_params_dict[activity_threshold_size][
+                collection_window_size
+            ],
+        }
+        pickle.dump(
+            to_output, open(outstring, "wb",),
+        )
+        print(print(dt.now()))
+        print(f"finished dumping\n")
