@@ -95,7 +95,7 @@ def plot_metrics_vs_features(
     ax.set_xlabel(xlabel)
 
     # get xtick labels
-    x_vals = nice_format_xticks(subreddit_logregs['books'].regression_metrics[1]['metrics'].model.apply(subreddit_logregs['books'].get_x_vals_from_modstring))
+    x_vals = nice_format_xticks(subreddit_logreg.regression_metrics[1]['metrics'].model.apply(subreddit_logreg.get_x_vals_from_modstring))
 
     ax.set_xticklabels([0]+x_vals, fontsize=16, rotation=15)
 
@@ -115,7 +115,7 @@ infile_dirs = [f"{working_dir}/{x}" for x in os.listdir(working_dir) if os.path.
 for infile_dir in infile_dirs:
     activity_threshold = int(infile_dir[-1])
     print(f"\n\nActivity threshold: {activity_threshold}")
-    infiles = [x for x in os.listdir(infile_dir) if not os.path.isdir(f"{infile_dir}/{x}")]
+    infiles = [x for x in os.listdir(infile_dir) if (not os.path.isdir(f"{infile_dir}/{x}"))  & (x.startswith('lite'))]
     for infile in infiles:
         collection_window_size = int(infile.split('_')[-1].strip('.p'))
         print(f"\n  Collection window: {collection_window_size}")
