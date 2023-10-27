@@ -64,7 +64,6 @@ def get_regression_params_from_pickles(infile_path):
     regression_infile = pickle.load(open(infile_path, 'rb'))
     plotting_metrics = {}
     for subreddit in regression_infile['logregs']:
-        plotting_metrics[subreddit] = {'collection_window': collection_window_size}
         plotting_metrics[subreddit]['index'] = (
             regression_infile['logregs'][subreddit].regression_metrics[1]["metrics"].index
         )
