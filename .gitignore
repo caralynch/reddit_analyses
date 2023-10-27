@@ -8,3 +8,4 @@
 !/feature_selection_*
 !*regression_data.p
 *.pyc
+!plotting_metrics.p
