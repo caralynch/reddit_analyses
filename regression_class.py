@@ -18,7 +18,18 @@ from sklearn import linear_model
 from mlxtend.feature_selection import SequentialFeatureSelector
 from mlxtend.plotting import plot_sequential_feature_selection as plot_sfs
 
-
+"""
+### TODO ###
+Remove period counters as unlikely to have multiple model periods
+Add multinomial logistic regression:
+    - assume threads will have already been binned, and the bins are numbered (indices)
+    - add function to calculate AUC for multinomial logreg
+        - need to assign success for each quartile
+        - also get success prediction for each quartile (mnlogit predict yields 4 numbers - one for each bin, but check this)
+        - get AUCs for all quartiles (from sklearn metrics)
+        - use average over all classes??
+Add domain tracker - e.g. domain frequency or something?
+"""
 class RedditRegression:
     def __init__(self, regression_params: dict):
         """Initialise regression data class
