@@ -30,7 +30,7 @@ class RedditRegression:
             'name': ideally subreddit name
             'regression_data': df of regression data,
             'thread_data': df of thread data,
-            'regression_type': str indicating whether logistic or linear regression
+            'regression_type': str indicating whether logistic, linear or multinomial logistic regression
             'collection_window': size of data collection window (used to calc author
                 stats), in days,
             'model_window': size of modelling window in days,
@@ -53,11 +53,12 @@ class RedditRegression:
             "hour": TimestampClass.get_hour,
         }
 
-        self.SMF_FUNCTIONS = {"logistic": "logit", "linear": "ols"}
+        self.SMF_FUNCTIONS = {"logistic": "logit", "linear": "ols", "mnlogit": "mnlogit"}
 
         self.SKL_FUNCTIONS = {
             "logistic": linear_model.LogisticRegression(),
             "linear": linear_model.LinearRegression(),
+            "mnlogit": linear_model.LinearRegression(),
         }
 
         self.regression_params = {}
