@@ -317,14 +317,12 @@ class RedditRegression:
         # get thread author data
         self.calc_author_thread_counts()
 
-        date_index = 0
-
         # get model data
-        self.get_regression_model_data(date_index)
+        self.get_regression_model_data()
 
         # get validation data
         if "validation_window" in self.regression_params:
-            self.get_regression_model_data(date_index, calval="val")
+            self.get_regression_model_data(calval="val")
 
         # if need FSS, run FSS
         if "FSS" in self.regression_params:
@@ -352,7 +350,7 @@ class RedditRegression:
         }
 
 
-    def get_regression_model_data(self, date_index, calval="cal"):
+    def get_regression_model_data(self, date_index=0, calval="cal"):
         """Get regression data for model window only, and merge with author data from
         collection thread data
 
