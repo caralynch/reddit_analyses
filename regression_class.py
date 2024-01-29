@@ -86,7 +86,7 @@ class RedditRegression:
 
         # if doing validation, add validation window
         if "validation_window" in regression_params:
-            self.regression_params[param] = regression_params[param]
+            self.regression_params["validation_window"] = regression_params["validation_window"]
 
         if "name" in regression_params:
             self.regression_params["name"] = regression_params["name"]
@@ -663,6 +663,9 @@ class RedditRegression:
     def plot_metrics_vs_features(
         self,
         metrics_to_plot,
+        ylabel,
+        multi_ax = False,
+        labels = [],
         name="",
         figsize=(7, 7),
         legend_loc=(0.9, 0.83),
@@ -676,6 +679,13 @@ class RedditRegression:
         ----------
         metrics_to_plot : list(str)
             list of metrics to plot
+        y_label : str
+            y axis label
+        multi_ax : bool, optional
+            If multiple metrics, assign True if want separate y axes,
+            by default False
+        labels: list, optional
+            If wish to label metrics, by default empty list
         name : str, optional
             subreddit name, by default ''
         figsize : tuple, optional
@@ -685,18 +695,29 @@ class RedditRegression:
         fig, ax = plt.subplots(1, figsize=figsize)
 
         ax_list = [ax]
-        if len(metrics_to_plot) > 1:
-            ax_list.append(ax.twinx())
+        if multi_ax:
+            if len(metrics_to_plot) > 1:
+                ax_list.append(ax.twinx())
+        if not labels:
+            labels = metrics_to_plot
 
         legend_handles = []
-        for i, metric in enumerate(metrics_to_plot):
+        i = 0
+        j = 0
+        for metric in metrics_to_plot:
             ax_list[i].plot(
                 self.regression_metrics["metrics"].index,
                 self.regression_metrics["metrics"].loc[:, metric],
-                color=plt_colours[i],
-                label=f"{metric}",
+                color=plt_colours[j],
+                label=f"{labels[j]}",
             )
-            ax_list[i].set_ylabel(metric)
+            if multi_ax:
+                ax_list[i].set_ylabel(metric)
+                i += 1
+            else:
+                ax_list[i].set_ylabel(ylabel)
+            j += 1
+                
 
         ax.set_title(
             f"{name} information criteria vs number of features"
@@ -716,7 +737,6 @@ class RedditRegression:
         """Extracts FSS metrics df from FSS metrics dict.
         Nicer output than dict for writing to csvs.
         """
-        started = False
         df = (
             self.FSS_metrics["metric_df"][
                 ["feature_idx", "cv_scores", "avg_score", "feature_names"]
