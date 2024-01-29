@@ -20,7 +20,7 @@ from mlxtend.plotting import plot_sequential_feature_selection as plot_sfs
 
 """
 ### TODO ###
-Remove period counters as unlikely to have multiple model periods - done
+
 Add multinomial logistic regression:
     - assume threads will have already been binned, and the bins are numbered (indices)
     - add function to calculate AUC for multinomial logreg
