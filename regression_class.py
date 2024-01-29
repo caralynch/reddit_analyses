@@ -20,7 +20,7 @@ from mlxtend.plotting import plot_sequential_feature_selection as plot_sfs
 
 """
 ### TODO ###
-Remove period counters as unlikely to have multiple model periods
+Remove period counters as unlikely to have multiple model periods - done
 Add multinomial logistic regression:
     - assume threads will have already been binned, and the bins are numbered (indices)
     - add function to calculate AUC for multinomial logreg
@@ -45,7 +45,6 @@ class RedditRegression:
             'collection_window': size of data collection window (used to calc author
                 stats), in days,
             'model_window': size of modelling window in days,
-            'step': steps between modelling windows in days,
             'validation_window': size of validation window in days,
             'FSS': whether to do FSS or not,
             'performance_scoring_method': method used to score FSS,
@@ -86,10 +85,8 @@ class RedditRegression:
         ]
 
         # if doing validation, add validation window
-        # if doing multiple model periods, add step between them
-        for param in ["validation_window", "step"]:
-            if param in regression_params:
-                self.regression_params[param] = regression_params[param]
+        if "validation_window" in regression_params:
+            self.regression_params[param] = regression_params[param]
 
         if "name" in regression_params:
             self.regression_params["name"] = regression_params["name"]
@@ -311,8 +308,6 @@ class RedditRegression:
     def main(self):
         """
         Calculates author count data from thread data with a rolling collection window.
-
-        For each period:
         - gets regression model data
         - runs FSS if required and gets sm modstrings
         - iterates through every proposed model:
@@ -322,62 +317,43 @@ class RedditRegression:
         # get thread author data
         self.calc_author_thread_counts()
 
-        self.period_counter = 1
+        date_index = 0
 
-        # iterate through each time period to model
-        if "step" in self.regression_params:
-            params = ["collection_window", "model_window"]
-            if "validation_window" in self.regression_params:
-                params += ["validation_window"]
-            windows_sum = np.array([self.regression_params[x] for x in params]).sum()
-            date_indices = range(
-                0, len(self.date_array) - windows_sum, self.regression_params["step"]
-            )
+        # get model data
+        self.get_regression_model_data(date_index)
+
+        # get validation data
+        if "validation_window" in self.regression_params:
+            self.get_regression_model_data(date_index, calval="val")
+
+        # if need FSS, run FSS
+        if "FSS" in self.regression_params:
+            print(f"Running FSS")
+            self.sm_modstrings = self.run_FSS()
         else:
-            date_indices = [0]
+            self.sm_modstrings = self.regression_params["models"]
+            # TODO fill in this section
 
-        for date_index in date_indices:
-            #print(f"# Period {self.period_counter} #")
-            if "activity_threshold" in self.regression_params:
-                self.removed_threads[self.period_counter] = {}
-            self.model_data[self.period_counter] = {}
+        # iterate through each model
+        model_results = {}
+        param_dict = {}
+        for mod_key in self.sm_modstrings:
+            print(f"Model {mod_key}")
+            regression_out_dict = self.run_regression(mod_key)
+            model_results[mod_key] = regression_out_dict["model_metrics"]
+            param_dict[mod_key] = regression_out_dict["regression_params"]
 
-            # get model data for this period
-            self.get_regression_model_data(date_index)
+        # convert model metrics dict to df
+        model_results = pd.DataFrame.from_dict(model_results, orient="index")
 
-            # get validation data for this period if validation
-            if "validation_window" in self.regression_params:
-                self.get_regression_model_data(date_index, calval="val")
+        self.regression_metrics = {
+            "regression_params": param_dict,
+            "metrics": model_results,
+        }
 
-            # if need FSS, run FSS for this time period
-            if "FSS" in self.regression_params:
-                print(f"Running FSS")
-                self.sm_modstrings = self.run_FSS()
-            else:
-                self.sm_modstrings = self.regression_params["models"]
-                # TODO fill in this section
-
-            # iterate through each model
-            model_results = {}
-            param_dict = {}
-            for mod_key in self.sm_modstrings:
-                print(f"Model {mod_key}")
-                regression_out_dict = self.run_regression(mod_key)
-                model_results[mod_key] = regression_out_dict["model_metrics"]
-                param_dict[mod_key] = regression_out_dict["regression_params"]
-
-            # convert model metrics dict to df
-            model_results = pd.DataFrame.from_dict(model_results, orient="index")
-
-            self.regression_metrics[self.period_counter] = {
-                "regression_params": param_dict,
-                "metrics": model_results,
-            }
-
-            self.period_counter += 1
 
     def get_regression_model_data(self, date_index, calval="cal"):
-        """Get regression data for model period only, and merge with author data from
+        """Get regression data for model window only, and merge with author data from
         collection thread data
 
         Parameters
@@ -401,7 +377,7 @@ class RedditRegression:
             start += self.regression_params["model_window"]
             end = start + self.regression_params["validation_window"]
 
-        # find model period dates
+        # find model window dates
         model_dates = self.date_array[start:end]
         model_data = self.regression_data[
             self.regression_data.timestamp.apply(TimestampClass.get_date).isin(
@@ -433,7 +409,7 @@ class RedditRegression:
         ]:
             model_data[col] = model_data.timestamp.apply(self.COLUMN_FUNCTIONS[col])
 
-        self.model_data[self.period_counter][calval] = model_data
+        self.model_data[calval] = model_data
 
         if calval == "cal":
             self.regression_model_data = model_data
@@ -451,7 +427,7 @@ class RedditRegression:
         Parameters
         ----------
         model_data : pd.DataFrame
-            regression data in model time period
+            regression data in model time window
         thread_data_cols : list
             list of thread data columns to merge with regression data
         calval : str
@@ -474,7 +450,7 @@ class RedditRegression:
         if "activity_threshold" in self.regression_params:
             threshold = self.regression_params["activity_threshold"]
             #print(f"Performing thresholding")
-            self.removed_threads[self.period_counter][calval] = model_data.loc[
+            self.removed_threads[calval] = model_data.loc[
                 model_data.author_all_activity_count < threshold, :
             ]
             model_data = model_data.loc[
@@ -568,10 +544,10 @@ class RedditRegression:
         Dict
             dictionary of model strings from FSS
         """
-        self.FSS_metrics[self.period_counter] = self.forward_sequential_selection(
+        self.FSS_metrics = self.forward_sequential_selection(
             self.regression_model_data[self.regression_params["x_cols"]],
             self.regression_model_data[self.regression_params["y_col"]],
-            name=f"{self.regression_params['name']}_period_{self.period_counter}",
+            name=f"{self.regression_params['name']}",
             scoring_method=self.regression_params["performance_scoring_method"],
             model=self.SKL_FUNCTIONS[self.regression_params["regression_type"]],
         )
@@ -597,7 +573,7 @@ class RedditRegression:
             List of features for each model - key is number of features value is list of
             string names of features.
         """
-        feature_names_col = self.FSS_metrics[self.period_counter][
+        feature_names_col = self.FSS_metrics[
             "metric_df"
         ].feature_names
         features = {}
@@ -608,31 +584,26 @@ class RedditRegression:
         return features
 
     def get_num_threads_modelled(self):
-        """Creates df with number of threads modelled and removed for each time
-        period
+        """Creates df with number of threads modelled and removed.
         """
         started = False
-        for period in self.model_data:
-            num_threads_modelled = {}
-            for calval in self.model_data[period]:
-                num_threads_modelled[calval] = {
-                    "modelled_threads": len(self.model_data[period][calval])
-                }
-                if "activity_threshold" in self.regression_params:
-                    num_threads_modelled[calval]["removed_threads"] = len(
-                        self.removed_threads[period][calval]
-                    )
-            df = pd.DataFrame.from_dict(num_threads_modelled)
-            df.columns = pd.MultiIndex.from_product(
-                [[period], df.columns], names=["period", "model"]
-            )
-            if not started:
-                num_threads_modelled_df = df
-                started = True
-            else:
-                num_threads_modelled_df = pd.concat(
-                    (num_threads_modelled_df, df), axis=1
+        num_threads_modelled = {}
+        for calval in self.model_data:
+            num_threads_modelled[calval] = {
+                "modelled_threads": len(self.model_data[calval])
+            }
+            if "activity_threshold" in self.regression_params:
+                num_threads_modelled[calval]["removed_threads"] = len(
+                    self.removed_threads[calval]
                 )
+        df = pd.DataFrame.from_dict(num_threads_modelled)
+        if not started:
+            num_threads_modelled_df = df
+            started = True
+        else:
+            num_threads_modelled_df = pd.concat(
+                (num_threads_modelled_df, df), axis=1
+            )
 
         self.num_threads_modelled = num_threads_modelled_df.T
 
@@ -658,40 +629,39 @@ class RedditRegression:
                         self.get_FSS_metrics_df()
                     self.FSS_metrics_df.to_excel(writer, sheet_name="FSS_metrics")
 
-            for period in self.regression_metrics:
-                subreddit_metrics = self.regression_metrics[period]["metrics"]
-                if (
-                    "FSS" not in self.regression_params
-                    or self.regression_params["FSS"] == False
-                ):
-                    subreddit_metrics.sort_values("num_features", inplace=True)
-                min_subset = [
-                    i
-                    for i in subreddit_metrics.columns
-                    if ((i == "aic") | (i == "bic"))
-                ]
-                max_subset = [
-                    i
-                    for i in subreddit_metrics.columns
-                    if (i == "auc") | (i == "validation_auc")
-                ]
-                (
-                    subreddit_metrics.style.highlight_min(
-                        subset=min_subset, color="green", axis=0
-                    ).highlight_max(subset=max_subset, color="green", axis=0)
-                ).to_excel(writer, sheet_name=f"p{period}_metrics", index=False)
-                if type(self.num_threads_modelled) is dict:
-                    self.get_num_threads_modelled()
-                self.num_threads_modelled.to_excel(writer, sheet_name=f"thread_counts")
+            
+            subreddit_metrics = self.regression_metrics["metrics"]
+            if (
+                "FSS" not in self.regression_params
+                or self.regression_params["FSS"] == False
+            ):
+                subreddit_metrics.sort_values("num_features", inplace=True)
+            min_subset = [
+                i
+                for i in subreddit_metrics.columns
+                if ((i == "aic") | (i == "bic"))
+            ]
+            max_subset = [
+                i
+                for i in subreddit_metrics.columns
+                if (i == "auc") | (i == "validation_auc")
+            ]
+            (
+                subreddit_metrics.style.highlight_min(
+                    subset=min_subset, color="green", axis=0
+                ).highlight_max(subset=max_subset, color="green", axis=0)
+            ).to_excel(writer, sheet_name=f"metrics", index=False)
+            if type(self.num_threads_modelled) is dict:
+                self.get_num_threads_modelled()
+            self.num_threads_modelled.to_excel(writer, sheet_name=f"thread_counts")
 
-                for model in self.regression_metrics[period]["regression_params"]:
-                    self.regression_metrics[period]["regression_params"][
-                        model
-                    ].to_excel(writer, sheet_name=f"p{period}_mod{model}")
+            for model in self.regression_metrics["regression_params"]:
+                self.regression_metrics["regression_params"][
+                    model
+                ].to_excel(writer, sheet_name=f"mod{model}")
 
-    def plot_metrics_vs_features_one_period(
+    def plot_metrics_vs_features(
         self,
-        period,
         metrics_to_plot,
         name="",
         figsize=(7, 7),
@@ -700,12 +670,10 @@ class RedditRegression:
         xlabel="Number of features",
         show=True
     ):
-        """Plot given metrics (aic, auc, bic) on 1 plot for specified model period.
+        """Plot given metrics (aic, auc, bic) on 1 plot.
 
         Parameters
         ----------
-        period: int
-            model period
         metrics_to_plot : list(str)
             list of metrics to plot
         name : str, optional
@@ -723,15 +691,15 @@ class RedditRegression:
         legend_handles = []
         for i, metric in enumerate(metrics_to_plot):
             ax_list[i].plot(
-                self.regression_metrics[period]["metrics"].index,
-                self.regression_metrics[period]["metrics"].loc[:, metric],
+                self.regression_metrics["metrics"].index,
+                self.regression_metrics["metrics"].loc[:, metric],
                 color=plt_colours[i],
                 label=f"{metric}",
             )
             ax_list[i].set_ylabel(metric)
 
         ax.set_title(
-            f"{name} information criteria vs number of features period {period}"
+            f"{name} information criteria vs number of features"
         )
         ax.set_xlabel(xlabel)
         fig.legend(bbox_to_anchor=legend_loc)
@@ -743,73 +711,27 @@ class RedditRegression:
         else:
             plt.clf()
 
-    def plot_metrics_vs_features_all_periods(
-        self, metrics_to_plot, name="", figsize=(7, 7)
-    ):
-        """Plot given metrics (aic, auc, bic) on 1 plot over all time periods.
-        Parameters
-        ----------
-        metrics_to_plot : list(str)
-            list of metrics to plot
-        name : str, optional
-            subreddit name, by default ''
-        figsize : tuple, optional
-            figure size, by default (7,7)
-        """
-
-        linestyles = ["solid", "dotted", "dashed"]
-        plt_colours = list(mcolors.TABLEAU_COLORS.keys())
-        fig, ax = plt.subplots(1, figsize=figsize)
-        if len(metrics_to_plot) > 1:
-            ax_list = [ax, ax.twinx()]
-        else:
-            ax_list = [ax]
-
-        for period in self.regression_metrics:
-            for i, metric in enumerate(metrics_to_plot):
-                ax_list[i].plot(
-                    self.regression_metrics[period]["metrics"].index,
-                    self.regression_metrics[period]["metrics"].loc[:, metric],
-                    color=plt_colours[period],
-                    linestyle=linestyles[i],
-                    label=f"{metric} {period}",
-                )
-                ax_list[i].set_ylabel(metric)
-                ax_list[i].legend()
-
-        ax.set_title(f"{name} information criteria vs number of features all periods")
-        ax.set_xlabel("Number of features")
-
-        plt.show()
 
     def get_FSS_metrics_df(self):
-        """Extracts FSS metrics df for all time periods from FSS metrics dict.
+        """Extracts FSS metrics df from FSS metrics dict.
         Nicer output than dict for writing to csvs.
         """
         started = False
-        for period in self.FSS_metrics:
-            df = (
-                self.FSS_metrics[period]["metric_df"][
-                    ["feature_idx", "cv_scores", "avg_score", "feature_names"]
-                ]
-                .reset_index()
-                .rename(columns={"index": "number_features"})
-            )
-            df.loc[:, "period"] = period
-            if not started:
-                self.FSS_metrics_df = df
-                started = True
-            else:
-                self.FSS_metrics_df = pd.concat((self.FSS_metrics_df, df))
+        df = (
+            self.FSS_metrics["metric_df"][
+                ["feature_idx", "cv_scores", "avg_score", "feature_names"]
+            ]
+            .reset_index()
+            .rename(columns={"index": "number_features"})
+        )
+        self.FSS_metrics_df = df
 
-            # self.FSS_metrics[period].pop('metric_df')
-        self.FSS_metrics_df.set_index("period", inplace=True)
 
     def plot_FSS(
         self, figsize=(7, 7),
     ):
         """Plots the forward sequential selection AUC (or other performance measurement)
-        vs number of features for each period considered
+        vs number of features
 
         Parameters
         ----------
@@ -819,10 +741,9 @@ class RedditRegression:
             plot title, by default f"{self.regression_params['name']} Sequential Forward Selection"
         """
         fig, ax = plt.subplots(1, figsize=figsize)
-        for period in self.FSS_metrics:
-            x = self.FSS_metrics[period]["metric_df"].index
-            y = self.FSS_metrics[period]["metric_df"].avg_score
-            ax.plot(x, y, label=period)
+        x = self.FSS_metrics["metric_df"].index
+        y = self.FSS_metrics["metric_df"].avg_score
+        ax.plot(x, y)
         ax.set_title(f"{self.regression_params['name']} Sequential Forward Selection")
         ax.set_xlabel("Number of features")
         ax.set_ylabel(self.regression_params["performance_scoring_method"])
@@ -1110,3 +1031,47 @@ class TimestampClass:
     @staticmethod
     def get_hour(timestamp):
         return timestamp.hour
+
+
+# ARCHIVE
+"""
+    def plot_metrics_vs_features_all_periods(
+        self, metrics_to_plot, name="", figsize=(7, 7)
+    ):
+        '''Plot given metrics (aic, auc, bic) on 1 plot over all time periods.
+        Parameters
+        ----------
+        metrics_to_plot : list(str)
+            list of metrics to plot
+        name : str, optional
+            subreddit name, by default ''
+        figsize : tuple, optional
+            figure size, by default (7,7)
+        '''
+
+        linestyles = ["solid", "dotted", "dashed"]
+        plt_colours = list(mcolors.TABLEAU_COLORS.keys())
+        fig, ax = plt.subplots(1, figsize=figsize)
+        if len(metrics_to_plot) > 1:
+            ax_list = [ax, ax.twinx()]
+        else:
+            ax_list = [ax]
+
+        for period in self.regression_metrics:
+            for i, metric in enumerate(metrics_to_plot):
+                ax_list[i].plot(
+                    self.regression_metrics[period]["metrics"].index,
+                    self.regression_metrics[period]["metrics"].loc[:, metric],
+                    color=plt_colours[period],
+                    linestyle=linestyles[i],
+                    label=f"{metric} {period}",
+                )
+                ax_list[i].set_ylabel(metric)
+                ax_list[i].legend()
+
+        ax.set_title(f"{name} information criteria vs number of features all periods")
+        ax.set_xlabel("Number of features")
+
+        plt.show()
+
+"""
