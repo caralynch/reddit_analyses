@@ -68,7 +68,7 @@ class RedditRegression:
         self.SKL_FUNCTIONS = {
             "logistic": linear_model.LogisticRegression(),
             "linear": linear_model.LinearRegression(),
-            "mnlogit": linear_model.LinearRegression(),
+            "mnlogit": linear_model.LogisticRegression(multi_class='multinomial'),
         }
 
         self.regression_params = {}
