@@ -1,28 +1,40 @@
+# data types
 import numpy as np
 import pandas as pd
 from reddit_dataclass import RedditData as reddit
+import datetime
+
+# I/O
 import pickle
+
+# plots
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-import scipy.stats as scpstat
 import matplotlib.dates as dates
-import datetime
+
+# stats
+import scipy.stats as scpstat
 from sklearn import metrics
 import statsmodels.formula.api as smf
 import statsmodels.api as sm
+from sklearn import preprocessing
+from sklearn import linear_model
 from itertools import groupby
 
-
 # for feature selection
-from sklearn import linear_model
 from mlxtend.feature_selection import SequentialFeatureSelector
 from mlxtend.plotting import plot_sequential_feature_selection as plot_sfs
 
 """
 ### TODO ###
 
+Change to sklearn SFS? 
+    https://scikit-learn.org/stable/modules/feature_selection.html#sequential-feature-selection
+    https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.SequentialFeatureSelector.html#sklearn.feature_selection.SequentialFeatureSelector
+
+    Potential incorporate as part of a pipeline??
 Add multinomial logistic regression:
-    - assume threads will have already been binned, and the bins are numbered (indices)
+    - assume threads will have already been binned, and the bins are numbered (indices) - also assume bins have roughly equal weights
     - add function to calculate AUC for multinomial logreg
         - need to assign success for each quartile
         - also get success prediction for each quartile (mnlogit predict yields 4 numbers - one for each bin, but check this)
@@ -31,6 +43,21 @@ Add multinomial logistic regression:
 Add domain tracker - e.g. domain frequency or something?
 """
 class RedditRegression:
+    # if these cols are required they can be calculated
+    self.COLUMN_FUNCTIONS = {
+        "time_in_secs": TimestampClass.get_float_seconds,
+        "num_dayofweek": TimestampClass.get_dayofweek,
+        "hour": TimestampClass.get_hour,
+    }
+
+    self.SMF_FUNCTIONS = {"logistic": "logit", "linear": "ols", "mnlogit": "mnlogit"}
+
+    self.SKL_FUNCTIONS = {
+        "logistic": linear_model.LogisticRegression(),
+        "linear": linear_model.LinearRegression(),
+        "mnlogit": linear_model.LogisticRegression(multi_class='multinomial'),
+    }
+    
     def __init__(self, regression_params: dict):
         """Initialise regression data class
 
@@ -54,22 +81,10 @@ class RedditRegression:
             'metrics': list of metrics to output (AUC, AIC,...)
             'activity_threshold': nb of activities per week per author to include
                                 (optional)
+            'scale': True if wish to use sklearn's scaler in preprocessing.
         """
 
-        # if these cols are required they can be calculated
-        self.COLUMN_FUNCTIONS = {
-            "time_in_secs": TimestampClass.get_float_seconds,
-            "num_dayofweek": TimestampClass.get_dayofweek,
-            "hour": TimestampClass.get_hour,
-        }
-
-        self.SMF_FUNCTIONS = {"logistic": "logit", "linear": "ols", "mnlogit": "mnlogit"}
-
-        self.SKL_FUNCTIONS = {
-            "logistic": linear_model.LogisticRegression(),
-            "linear": linear_model.LinearRegression(),
-            "mnlogit": linear_model.LogisticRegression(multi_class='multinomial'),
-        }
+        
 
         self.regression_params = {}
 
@@ -852,7 +867,8 @@ class RedditRegression:
 
     @staticmethod
     def forward_sequential_selection(
-        X, y, name="", scoring_method="roc_auc", model=linear_model.LogisticRegression()
+        X, y, name="", scoring_method="roc_auc", model=linear_model.LogisticRegression(),
+        cv=None
     ):
         """Performs forward sequential selection given df of X values to consider
         for features, y column name, an optional name of the data, and scoring method.
@@ -883,7 +899,7 @@ class RedditRegression:
         k = (1, max_k)
 
         sfs = SequentialFeatureSelector(
-            model, k_features=k, forward=True, scoring=scoring_method, cv=None,
+            model, k_features=k, forward=True, scoring=scoring_method, cv=cv,
         )
 
         selected_features = sfs.fit(X, y)
