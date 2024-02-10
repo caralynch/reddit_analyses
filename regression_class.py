@@ -57,7 +57,14 @@ class RedditRegression:
         "linear": linear_model.LinearRegression(),
         "mnlogit": linear_model.LogisticRegression(multi_class='multinomial'),
     }
-    
+
+    self.PERFORMANCE_SCORING_METHODS = {
+        "logistic": "roc_auc",
+        "linear": "r2",
+        "mnlogit": self.mnlogit_accuracy_score
+
+    }
+
     def __init__(self, regression_params: dict):
         """Initialise regression data class
 
@@ -83,10 +90,8 @@ class RedditRegression:
                                 (optional)
             'scale': True if wish to use sklearn's scaler in preprocessing.
         """
-
-        
-
-        self.regression_params = {}
+        # construct regression params dict
+        self.construct_regression_params_dict(regression_params)
 
         self.regression_data = regression_params["regression_data"]
 
@@ -94,47 +99,62 @@ class RedditRegression:
         regression_params["thread_data"]["sentiment_score"] = regression_params[
             "thread_data"
         ].apply(self.get_score, axis=1)
+
         # only need certain cols from thread data
         self.thread_data = regression_params["thread_data"][
             ["thread_id", "id", "timestamp", "author", "sentiment_score"]
         ]
 
-        # if doing validation, add validation window
-        if "validation_window" in regression_params:
-            self.regression_params["validation_window"] = regression_params["validation_window"]
+        self.manage_dates_and_windows()
 
-        if "name" in regression_params:
-            self.regression_params["name"] = regression_params["name"]
-        else:
-            self.regression_params["name"] = ""
+        # create dicts for info collection
+        self.regression_metrics = {}
+        self.model_data = {}
+        self.num_threads_modelled = {}
+    
+    def construct_regression_params_dict(self, regression_params):
+        """ Makes dict to keep track of regression params.
+        """
+        self.regression_params = {}
 
-        if "regression_type" not in regression_params:
-            regression_params["regression_type"] = "logistic"
+        defaults = {
+            "name": "",
+            "regression_type": "logistic",
+            "metrics": ["roc_auc"]
+        }
 
-        if "FSS" in regression_params and (regression_params["FSS"] == True):
-            self.regression_params["FSS"] = True
+        for key in regression_params:
+            self.regression_params[key] = regression_params[key]
+
+        for key in [x for x in defaults if x not in regression_params]:
+            self.regression_params[key] = defaults[key]
+
+        self.add_params_for_FSS_or_models()
+
+        # author activity threshold
+        if "activity_threshold" in self.regression_params:
+            self.removed_threads = {}
+
+    
+    def add_params_for_FSS_or_models(self):
+        """Adds required parameters and empty dicts for FSS true or false.
+        """
+        if "FSS" in self.regression_params and (self.regression_params["FSS"]==True):
+            # if doing FSS, then need to create empty dicts for FSS metrics
             self.FSS_metrics = {}
             self.FSS_metrics_df = {}
-            if "performance_scoring_method" in regression_params:
-                self.regression_params[
-                    "performance_scoring_method"
-                ] = regression_params["performance_scoring_method"]
-            else:
-                if regression_params["regression_type"] == "logistic":
-                    self.regression_params["performance_scoring_method"] = "roc_auc"
-                else:
-                    self.regression_params["performance_scoring_method"] = "r2"
 
-            # if performing FSS then need x and y cols
-            self.regression_params["x_cols"] = regression_params["x_cols"]
-            if "y_col" in regression_params:
-                self.regression_params["y_col"] = regression_params["y_col"]
-            else:
+            # also need to make sure there's a performance scoring method
+            if "performance_scoring_method" not in self.regression_params:
+                self.regression_params["performance_scoring_method"] = self.PERFORMANCE_SCORING_METHODS[self.regression_params["regression_type"]]
+            elif "performance_scoring_method" == "mnlogit":
+                self.regression_params["performance_scoring_method"] = self.PERFORMANCE_SCORING_METHODS["mnlogit"]
+
+            # there also needs to be x and y columns
+            if "y_col" not in self.regression_params:
                 self.regression_params["y_col"] = "success"
         else:
-            # if not performing FSS then need models to run
-            self.regression_params["models"] = regression_params["models"]
-            # if input model strings, then find the x cols
+            #if not performing FSS, should have been given the models to run
             self.regression_params["x_cols"] = self.get_x_vals_from_modstring_dict(
                 self.regression_params["models"]
             )
@@ -151,15 +171,11 @@ class RedditRegression:
                 self.regression_params["y_col"] = y_cols[0]
             else:
                 self.regression_params["y_col"] = y_cols
-
-        if "metrics" in regression_params:
-            self.regression_params["metrics"] = regression_params["metrics"]
-        else:
-            self.regression_params["metrics"] = ["roc_auc"]
-
-        # model type assigns model function to use
-        self.regression_params["regression_type"] = regression_params["regression_type"]
-
+    
+    def manage_dates_and_windows(self):
+        """Create the date array and create model, collection and validation windows if
+        not given
+        """
         # get array of dates in dataset
         date_array = self.thread_data.timestamp.apply(TimestampClass.get_date).unique()
 
@@ -167,31 +183,44 @@ class RedditRegression:
         date_array = pd.date_range(start=date_array[0], end=date_array[-1])
         self.date_array = pd.DataFrame(date_array)[0].apply(TimestampClass.get_date)
 
-        for window in ["collection_window", "model_window"]:
-            if window not in regression_params:
-                if window == "collection_window":
-                    self.regression_params[window] = 7
-                elif "validation_window" in self.regression_params:
-                    self.regression_params[window] = len(self.date_array) - (
-                        self.regression_params["validation_window"]
-                        + self.regression_params["collection_window"]
-                    )
+        # check all required windows are present
+        # expected portions
+        windows = {
+            'collection_window': 1/4,
+            'model_window': 1/2,
+            'validation_window': 1/4,
+            }
+
+        
+        # if the set difference is empty, then all windows present, if will not occur
+        missing_windows = set(windows.keys()) - set(self.regression_params.keys)
+        if missing_windows:
+            present_windows = set(windows.keys()) & set(self.regression_params.keys)
+            taken_days = 0
+            for key in present_windows:
+                taken_days += self.regression_params[key]
+            days_left = len(self.date_array) - taken_days
+            if days_left <= 0:
+                for key in missing_windows:
+                    self.regression_params[key] = 0
+            elif days_left == 1:
+                if 'collection_window' in missing_windows:
+                    self.regression_params['collection_window'] = days_left
+                elif 'model_window' in missing_windows:
+                    self.regression_params['model_window'] = days_left
                 else:
-                    self.regression_params[window] = 7
+                    self.regression_params['validation_window'] = days_left
             else:
-                self.regression_params[window] = regression_params[window]
+                missing_windows_list = [x for x in missing_windows]
+                missing_windows_proportions = [windows[x] for x in missing_windows_list]
+                new_missing_windows_proportions = [x*sum(missing_windows_proportions) for x in missing_windows_proportions]
+                for i, key in enumerate(missing_windows_list):
+                    self.regression_params[key] = round(missing_windows_proportions[i]*days_left)
 
-        # author activity threshold
-        if "activity_threshold" in regression_params:
-            self.regression_params["activity_threshold"] = regression_params[
-                "activity_threshold"
-            ]
-            self.removed_threads = {}
 
-        # create dict for info collection
-        self.regression_metrics = {}
-        self.model_data = {}
-        self.num_threads_modelled = {}
+
+
+
 
     def calc_author_thread_counts(self):
         """Update thread data df with author activity, post and comment counts. These
@@ -949,6 +978,13 @@ class RedditRegression:
             return row.subject_sentiment_score
         else:
             return row.body_sentiment_score
+        
+    @staticmethod
+    def mnlogit_accuracy_score(estimator, X, y):
+        probabilities = pd.DataFrame(estimator.predict_proba(X))
+        y_pred = probabilities.idxmax(axis=1)
+        value_counts = (y_pred == y).value_counts()
+        return value_counts.loc[True]/value_counts.sum()
 
     def get_author_collection_data(self, date_index):
         """DEPRECATED
