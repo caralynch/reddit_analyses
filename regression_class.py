@@ -28,11 +28,6 @@ from mlxtend.plotting import plot_sequential_feature_selection as plot_sfs
 """
 ### TODO ###
 
-Change to sklearn SFS? 
-    https://scikit-learn.org/stable/modules/feature_selection.html#sequential-feature-selection
-    https://scikit-learn.org/stable/modules/generated/sklearn.feature_selection.SequentialFeatureSelector.html#sklearn.feature_selection.SequentialFeatureSelector
-
-    Potential incorporate as part of a pipeline??
 Add multinomial logistic regression:
     - assume threads will have already been binned, and the bins are numbered (indices) - also assume bins have roughly equal weights
     - add function to calculate AUC for multinomial logreg
@@ -42,27 +37,69 @@ Add multinomial logistic regression:
         - use average over all classes??
 Add domain tracker - e.g. domain frequency or something?
 """
-class RedditRegression:
+
+
+class TimestampClass:
+    """Class for various timestamp functions
+    """
+
+    @staticmethod
+    def get_date(timestamp):
+        """Get date from timestamp
+
+        Parameters
+        ----------
+        timestamp : pd.Timestamp
+
+        Returns
+        -------
+        pd.TimeStamp.date
+        """
+        return timestamp.date()
+
+    @staticmethod
+    def get_float_seconds(timestamp):
+        hours = timestamp.hour
+        minutes = timestamp.minute
+        seconds = timestamp.second
+        return hours * 60 * 60 + minutes * 60 + seconds
+
+    @staticmethod
+    def get_dayofweek(timestamp):
+        return timestamp.dayofweek
+
+    @staticmethod
+    def get_hour(timestamp):
+        return timestamp.hour
+
+
+class RedditRegression(TimestampClass):
     # if these cols are required they can be calculated
-    self.COLUMN_FUNCTIONS = {
+    COLUMN_FUNCTIONS = {
         "time_in_secs": TimestampClass.get_float_seconds,
         "num_dayofweek": TimestampClass.get_dayofweek,
         "hour": TimestampClass.get_hour,
     }
 
-    self.SMF_FUNCTIONS = {"logistic": "logit", "linear": "ols", "mnlogit": "mnlogit"}
+    SMF_FUNCTIONS = {"logistic": "logit", "linear": "ols", "mnlogit": "mnlogit"}
 
-    self.SKL_FUNCTIONS = {
+    SKL_FUNCTIONS = {
         "logistic": linear_model.LogisticRegression(),
         "linear": linear_model.LinearRegression(),
-        "mnlogit": linear_model.LogisticRegression(multi_class='multinomial'),
+        "mnlogit": linear_model.LogisticRegression(multi_class="multinomial"),
     }
 
-    self.PERFORMANCE_SCORING_METHODS = {
+    @staticmethod
+    def mnlogit_accuracy_score(estimator, X, y):
+        probabilities = pd.DataFrame(estimator.predict_proba(X))
+        y_pred = probabilities.idxmax(axis=1)
+        value_counts = (y_pred == y).value_counts()
+        return value_counts.loc[True] / value_counts.sum()
+
+    PERFORMANCE_SCORING_METHODS = {
         "logistic": "roc_auc",
         "linear": "r2",
-        "mnlogit": self.mnlogit_accuracy_score
-
+        "mnlogit": mnlogit_accuracy_score,
     }
 
     def __init__(self, regression_params: dict):
@@ -111,7 +148,7 @@ class RedditRegression:
         self.regression_metrics = {}
         self.model_data = {}
         self.num_threads_modelled = {}
-    
+
     def construct_regression_params_dict(self, regression_params):
         """ Makes dict to keep track of regression params.
         """
@@ -120,7 +157,8 @@ class RedditRegression:
         defaults = {
             "name": "",
             "regression_type": "logistic",
-            "metrics": ["roc_auc"]
+            "metrics": ["roc_auc"],
+            "scale": True,
         }
 
         for key in regression_params:
@@ -135,26 +173,31 @@ class RedditRegression:
         if "activity_threshold" in self.regression_params:
             self.removed_threads = {}
 
-    
     def add_params_for_FSS_or_models(self):
         """Adds required parameters and empty dicts for FSS true or false.
         """
-        if "FSS" in self.regression_params and (self.regression_params["FSS"]==True):
+        if "FSS" in self.regression_params and (self.regression_params["FSS"] == True):
             # if doing FSS, then need to create empty dicts for FSS metrics
             self.FSS_metrics = {}
             self.FSS_metrics_df = {}
 
             # also need to make sure there's a performance scoring method
             if "performance_scoring_method" not in self.regression_params:
-                self.regression_params["performance_scoring_method"] = self.PERFORMANCE_SCORING_METHODS[self.regression_params["regression_type"]]
-            elif "performance_scoring_method" == "mnlogit":
-                self.regression_params["performance_scoring_method"] = self.PERFORMANCE_SCORING_METHODS["mnlogit"]
+                self.regression_params[
+                    "performance_scoring_method"
+                ] = self.PERFORMANCE_SCORING_METHODS[
+                    self.regression_params["regression_type"]
+                ]
+            elif "mnlogit" in self.regression_params["performance_scoring_method"]:
+                self.regression_params[
+                    "performance_scoring_method"
+                ] = self.PERFORMANCE_SCORING_METHODS["mnlogit"]
 
             # there also needs to be x and y columns
             if "y_col" not in self.regression_params:
                 self.regression_params["y_col"] = "success"
         else:
-            #if not performing FSS, should have been given the models to run
+            # if not performing FSS, should have been given the models to run
             self.regression_params["x_cols"] = self.get_x_vals_from_modstring_dict(
                 self.regression_params["models"]
             )
@@ -171,7 +214,7 @@ class RedditRegression:
                 self.regression_params["y_col"] = y_cols[0]
             else:
                 self.regression_params["y_col"] = y_cols
-    
+
     def manage_dates_and_windows(self):
         """Create the date array and create model, collection and validation windows if
         not given
@@ -186,16 +229,15 @@ class RedditRegression:
         # check all required windows are present
         # expected portions
         windows = {
-            'collection_window': 1/4,
-            'model_window': 1/2,
-            'validation_window': 1/4,
-            }
+            "collection_window": 1 / 4,
+            "model_window": 1 / 2,
+            "validation_window": 1 / 4,
+        }
 
-        
         # if the set difference is empty, then all windows present, if will not occur
-        missing_windows = set(windows.keys()) - set(self.regression_params.keys)
+        missing_windows = set(windows.keys()) - set(self.regression_params.keys())
         if missing_windows:
-            present_windows = set(windows.keys()) & set(self.regression_params.keys)
+            present_windows = set(windows.keys()) & set(self.regression_params.keys())
             taken_days = 0
             for key in present_windows:
                 taken_days += self.regression_params[key]
@@ -204,23 +246,23 @@ class RedditRegression:
                 for key in missing_windows:
                     self.regression_params[key] = 0
             elif days_left == 1:
-                if 'collection_window' in missing_windows:
-                    self.regression_params['collection_window'] = days_left
-                elif 'model_window' in missing_windows:
-                    self.regression_params['model_window'] = days_left
+                if "collection_window" in missing_windows:
+                    self.regression_params["collection_window"] = days_left
+                elif "model_window" in missing_windows:
+                    self.regression_params["model_window"] = days_left
                 else:
-                    self.regression_params['validation_window'] = days_left
+                    self.regression_params["validation_window"] = days_left
             else:
                 missing_windows_list = [x for x in missing_windows]
                 missing_windows_proportions = [windows[x] for x in missing_windows_list]
-                new_missing_windows_proportions = [x*sum(missing_windows_proportions) for x in missing_windows_proportions]
+                new_missing_windows_proportions = [
+                    x * sum(missing_windows_proportions)
+                    for x in missing_windows_proportions
+                ]
                 for i, key in enumerate(missing_windows_list):
-                    self.regression_params[key] = round(missing_windows_proportions[i]*days_left)
-
-
-
-
-
+                    self.regression_params[key] = round(
+                        new_missing_windows_proportions[i] * days_left
+                    )
 
     def calc_author_thread_counts(self):
         """Update thread data df with author activity, post and comment counts. These
@@ -393,7 +435,6 @@ class RedditRegression:
             "metrics": model_results,
         }
 
-
     def get_regression_model_data(self, date_index=0, calval="cal"):
         """Get regression data for model window only, and merge with author data from
         collection thread data
@@ -491,7 +532,7 @@ class RedditRegression:
         # is less than threshold as these cannot be modelled
         if "activity_threshold" in self.regression_params:
             threshold = self.regression_params["activity_threshold"]
-            #print(f"Performing thresholding")
+            # print(f"Performing thresholding")
             self.removed_threads[calval] = model_data.loc[
                 model_data.author_all_activity_count < threshold, :
             ]
@@ -615,9 +656,7 @@ class RedditRegression:
             List of features for each model - key is number of features value is list of
             string names of features.
         """
-        feature_names_col = self.FSS_metrics[
-            "metric_df"
-        ].feature_names
+        feature_names_col = self.FSS_metrics["metric_df"].feature_names
         features = {}
         i = 1
         for feature_tuple in feature_names_col:
@@ -643,9 +682,7 @@ class RedditRegression:
             num_threads_modelled_df = df
             started = True
         else:
-            num_threads_modelled_df = pd.concat(
-                (num_threads_modelled_df, df), axis=1
-            )
+            num_threads_modelled_df = pd.concat((num_threads_modelled_df, df), axis=1)
 
         self.num_threads_modelled = num_threads_modelled_df.T
 
@@ -671,7 +708,6 @@ class RedditRegression:
                         self.get_FSS_metrics_df()
                     self.FSS_metrics_df.to_excel(writer, sheet_name="FSS_metrics")
 
-            
             subreddit_metrics = self.regression_metrics["metrics"]
             if (
                 "FSS" not in self.regression_params
@@ -679,9 +715,7 @@ class RedditRegression:
             ):
                 subreddit_metrics.sort_values("num_features", inplace=True)
             min_subset = [
-                i
-                for i in subreddit_metrics.columns
-                if ((i == "aic") | (i == "bic"))
+                i for i in subreddit_metrics.columns if ((i == "aic") | (i == "bic"))
             ]
             max_subset = [
                 i
@@ -698,22 +732,22 @@ class RedditRegression:
             self.num_threads_modelled.to_excel(writer, sheet_name=f"thread_counts")
 
             for model in self.regression_metrics["regression_params"]:
-                self.regression_metrics["regression_params"][
-                    model
-                ].to_excel(writer, sheet_name=f"mod{model}")
+                self.regression_metrics["regression_params"][model].to_excel(
+                    writer, sheet_name=f"mod{model}"
+                )
 
     def plot_metrics_vs_features(
         self,
         metrics_to_plot,
         ylabel,
-        multi_ax = False,
-        labels = [],
+        multi_ax=False,
+        labels=[],
         name="",
         figsize=(7, 7),
         legend_loc=(0.9, 0.83),
         outfile="",
         xlabel="Number of features",
-        show=True
+        show=True,
     ):
         """Plot given metrics (aic, auc, bic) on 1 plot.
 
@@ -759,11 +793,8 @@ class RedditRegression:
             else:
                 ax_list[i].set_ylabel(ylabel)
             j += 1
-                
 
-        ax.set_title(
-            f"{name} information criteria vs number of features"
-        )
+        ax.set_title(f"{name} information criteria vs number of features")
         ax.set_xlabel(xlabel)
         fig.legend(bbox_to_anchor=legend_loc)
 
@@ -773,7 +804,6 @@ class RedditRegression:
             plt.show()
         else:
             plt.clf()
-
 
     def get_FSS_metrics_df(self):
         """Extracts FSS metrics df from FSS metrics dict.
@@ -787,7 +817,6 @@ class RedditRegression:
             .rename(columns={"index": "number_features"})
         )
         self.FSS_metrics_df = df
-
 
     def plot_FSS(
         self, figsize=(7, 7),
@@ -896,8 +925,12 @@ class RedditRegression:
 
     @staticmethod
     def forward_sequential_selection(
-        X, y, name="", scoring_method="roc_auc", model=linear_model.LogisticRegression(),
-        cv=None
+        X,
+        y,
+        name="",
+        scoring_method="roc_auc",
+        model=linear_model.LogisticRegression(),
+        cv=None,
     ):
         """Performs forward sequential selection given df of X values to consider
         for features, y column name, an optional name of the data, and scoring method.
@@ -978,13 +1011,6 @@ class RedditRegression:
             return row.subject_sentiment_score
         else:
             return row.body_sentiment_score
-        
-    @staticmethod
-    def mnlogit_accuracy_score(estimator, X, y):
-        probabilities = pd.DataFrame(estimator.predict_proba(X))
-        y_pred = probabilities.idxmax(axis=1)
-        value_counts = (y_pred == y).value_counts()
-        return value_counts.loc[True]/value_counts.sum()
 
     def get_author_collection_data(self, date_index):
         """DEPRECATED
@@ -1067,81 +1093,3 @@ class RedditRegression:
         )
 
         return author_info
-
-
-class TimestampClass:
-    """Class for various timestamp functions
-    """
-
-    @staticmethod
-    def get_date(timestamp):
-        """Get date from timestamp
-
-        Parameters
-        ----------
-        timestamp : pd.Timestamp
-
-        Returns
-        -------
-        pd.TimeStamp.date
-        """
-        return timestamp.date()
-
-    @staticmethod
-    def get_float_seconds(timestamp):
-        hours = timestamp.hour
-        minutes = timestamp.minute
-        seconds = timestamp.second
-        return hours * 60 * 60 + minutes * 60 + seconds
-
-    @staticmethod
-    def get_dayofweek(timestamp):
-        return timestamp.dayofweek
-
-    @staticmethod
-    def get_hour(timestamp):
-        return timestamp.hour
-
-
-# ARCHIVE
-"""
-    def plot_metrics_vs_features_all_periods(
-        self, metrics_to_plot, name="", figsize=(7, 7)
-    ):
-        '''Plot given metrics (aic, auc, bic) on 1 plot over all time periods.
-        Parameters
-        ----------
-        metrics_to_plot : list(str)
-            list of metrics to plot
-        name : str, optional
-            subreddit name, by default ''
-        figsize : tuple, optional
-            figure size, by default (7,7)
-        '''
-
-        linestyles = ["solid", "dotted", "dashed"]
-        plt_colours = list(mcolors.TABLEAU_COLORS.keys())
-        fig, ax = plt.subplots(1, figsize=figsize)
-        if len(metrics_to_plot) > 1:
-            ax_list = [ax, ax.twinx()]
-        else:
-            ax_list = [ax]
-
-        for period in self.regression_metrics:
-            for i, metric in enumerate(metrics_to_plot):
-                ax_list[i].plot(
-                    self.regression_metrics[period]["metrics"].index,
-                    self.regression_metrics[period]["metrics"].loc[:, metric],
-                    color=plt_colours[period],
-                    linestyle=linestyles[i],
-                    label=f"{metric} {period}",
-                )
-                ax_list[i].set_ylabel(metric)
-                ax_list[i].legend()
-
-        ax.set_title(f"{name} information criteria vs number of features all periods")
-        ax.set_xlabel("Number of features")
-
-        plt.show()
-
-"""
