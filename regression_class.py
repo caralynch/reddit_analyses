@@ -89,6 +89,12 @@ class RedditRegression(TimestampClass):
         "mnlogit": linear_model.LogisticRegression(multi_class="multinomial"),
     }
 
+    SMF_PARAMS_LOOKUP = {
+        "aic": "aic",
+        "bic": "bic",
+        "r2": "rsquared",
+    }
+
     @staticmethod
     def mnlogit_accuracy_score(estimator, X, y):
         probabilities = pd.DataFrame(estimator.predict_proba(X))
@@ -405,10 +411,17 @@ class RedditRegression(TimestampClass):
 
         # get model data
         self.get_regression_model_data()
-
+        
         # get validation data
         if "validation_window" in self.regression_params:
             self.get_regression_model_data(calval="val")
+        
+        # if scaling, perform now
+        if self.regression_params["scale"]:
+            self.perform_scaling()
+        else:
+            self.__model_data__ = self.model_data
+        
 
         # if need FSS, run FSS
         if "FSS" in self.regression_params:
@@ -416,7 +429,6 @@ class RedditRegression(TimestampClass):
             self.sm_modstrings = self.run_FSS()
         else:
             self.sm_modstrings = self.regression_params["models"]
-            # TODO fill in this section
 
         # iterate through each model
         model_results = {}
@@ -434,6 +446,33 @@ class RedditRegression(TimestampClass):
             "regression_params": param_dict,
             "metrics": model_results,
         }
+
+    def perform_scaling(self):
+        """Scale x column data using standard sklean Standard Scaler
+        """
+        self.scale_metrics_dict = {}
+        self.scaled_data = {}
+        for calval in self.model_data:
+            x_data = self.model_data[calval][self.regression_params['x_cols']]
+            scaled_x_data, self.scale_metrics_dict[calval] = self.scale_data(x_data)
+            y_data = self.model_data[calval][[self.regression_params['y_col']]]
+            self.scaled_data[calval] = pd.concat(
+                (y_data, scaled_x_data), axis=1
+            )
+        self.__model_data__ = self.scaled_data
+
+
+
+    @staticmethod
+    def scale_data(x_data):
+        scaler = preprocessing.StandardScaler().fit(x_data)
+        scaler_info = {
+            'mean': scaler.mean_,
+            'scale': scaler.scale_
+        }
+        x_scaled = pd.DataFrame(scaler.transform(x_data), columns=x_data.columns, index=x_data.index)
+        return x_scaled, scaler_info
+
 
     def get_regression_model_data(self, date_index=0, calval="cal"):
         """Get regression data for model window only, and merge with author data from
@@ -567,7 +606,7 @@ class RedditRegression(TimestampClass):
         """
         smf_model = (
             getattr(smf, self.SMF_FUNCTIONS[self.regression_params["regression_type"]])(
-                self.sm_modstrings[mod_key], data=self.regression_model_data
+                self.sm_modstrings[mod_key], data=self.__model_data__['cal']
             )
         ).fit()
 
@@ -583,18 +622,35 @@ class RedditRegression(TimestampClass):
             )
         model_results["model"] = self.sm_modstrings[mod_key]
 
-        SMF_PARAMS_LOOKUP = {
-            "aic": "aic",
-            "bic": "bic",
-            "r2": "rsquared",
+        custom_params = {
+            "auc": metrics.roc_auc_score,
+            "mnlogit_accuracy": self.mnlogit_accuracy_score_from_y_pred,
+            "mnlogit_auc": self.mnlogit_aucs,
+            "r2": metrics.r2_score,
         }
-        for metric in self.regression_params["metrics"]:
-            if metric == "roc_auc":
-                model_results["auc"] = metrics.roc_auc_score(
-                    self.regression_model_data.success, smf_model.predict()
+
+        y_pred = {'cal': smf_model.predict()}
+
+        if "validation_window" in self.regression_params:
+            y_pred['val'] = smf_model.predict(
+                exog=self.__model_data__['val']
                 )
+
+        
+        for metric in self.regression_params["metrics"]:
+            if metric in self.SMF_PARAMS_LOOKUP:
+                model_results[metric] = getattr(smf_model, self.SMF_PARAMS_LOOKUP[metric])
+            elif metric in custom_params:
+                for calval in y_pred:
+                    model_results["metric"] = getattr(
+                        custom_params[metric], self.__model_data__[calval][
+                            self.regression_params['y_col']
+                        ], y_pred[calval]
+                    )
             else:
-                model_results[metric] = getattr(smf_model, SMF_PARAMS_LOOKUP[metric])
+                print(f"{metric} unknown. Not calculated.")
+
+                
 
         stderr = pd.Series(
             np.sqrt(np.diag(smf_model.cov_params())), index=smf_model.params.index
@@ -602,18 +658,6 @@ class RedditRegression(TimestampClass):
         param_df = pd.DataFrame([smf_model.params, stderr, smf_model.pvalues]).T.rename(
             columns={0: "param", 1: "stderr", 2: "pvalue"}
         )
-
-        # get test dataset results
-        if "validation_window" in self.regression_params:
-            y_test_prediction = smf_model.predict(exog=self.validation_data)
-            if "roc_auc" in self.regression_params["metrics"]:
-                model_results["validation_auc"] = metrics.roc_auc_score(
-                    self.validation_data.success, y_test_prediction
-                )
-            else:
-                model_results["validation_r2"] = metrics.r2_score(
-                    self.validation_data.success, y_test_prediction
-                )
 
         out_dict = {"model_metrics": model_results, "regression_params": param_df}
         return out_dict
@@ -628,8 +672,8 @@ class RedditRegression(TimestampClass):
             dictionary of model strings from FSS
         """
         self.FSS_metrics = self.forward_sequential_selection(
-            self.regression_model_data[self.regression_params["x_cols"]],
-            self.regression_model_data[self.regression_params["y_col"]],
+            self.__model_data__['cal'][self.regression_params['x_cols']],
+            self.__model_data__['cal'][self.regression_params["y_col"]],
             name=f"{self.regression_params['name']}",
             scoring_method=self.regression_params["performance_scoring_method"],
             model=self.SKL_FUNCTIONS[self.regression_params["regression_type"]],
@@ -671,7 +715,7 @@ class RedditRegression(TimestampClass):
         num_threads_modelled = {}
         for calval in self.model_data:
             num_threads_modelled[calval] = {
-                "modelled_threads": len(self.model_data[calval])
+                "modelled_threads": len(self.__model_data__[calval])
             }
             if "activity_threshold" in self.regression_params:
                 num_threads_modelled[calval]["removed_threads"] = len(
@@ -990,6 +1034,31 @@ class RedditRegression(TimestampClass):
         )
         df.index.name = "param"
         return df
+    
+    @staticmethod
+    def mnlogit_accuracy_score_from_y_pred(y_true, y_pred):
+        y_pred = y_pred.idxmax(axis=1)
+        value_counts = (y_pred == y_true).value_counts()
+        return value_counts.loc[True] / value_counts.sum()
+
+    @staticmethod
+    def mnlogit_aucs(y_true, y_pred):
+        def assign_success_from_quartile(value, quartile_index):
+            if value == quartile_index:
+                return 1
+            else:
+                return 0
+        auc_vals = []
+        for i in y_pred.columns:
+            success_data = y_true.apply(assign_success_from_quartile,
+                                        quartile_index=i)
+            success_prediction = y_pred.loc[:, i]
+            auc = metrics.roc_auc_score(
+                success_data, success_prediction
+            )
+            auc_vals.append(auc)
+        return auc_vals
+        
 
     @staticmethod
     def get_score(row):
