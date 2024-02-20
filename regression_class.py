@@ -71,10 +71,44 @@ class TimestampClass:
     @staticmethod
     def get_hour(timestamp):
         return timestamp.hour
-    
+
+
 class QuantileClass:
     """Class for segmenting data into quantiles
     """
+
+    def __init__(self, data_series, quantiles):
+        self.data_series = data_series
+        self.quantiles = quantiles
+        self.quantile_values = self.get_quantiles(data_series, quantiles)
+
+    def main(self, weight_lower=False):
+        self.get_range_tuples_()
+        self.classify_cols_by_quantile_()
+        out_dict = {
+            "quantile_index_col": self.quantile_index_series,
+            "quantile_ranges": self.range_tuples,
+            "quantile_counts": self.values_per_quantile,
+        }
+        return out_dict
+
+    def get_range_tuples_(self, weight_lower=False):
+        self.weight_lower = weight_lower
+        self.values_per_quantile = self.get_number_per_quantile(
+            self.data_series, self.quantile_values, weight_lower=weight_lower
+        )
+        self.range_tuples = self.get_range_tuples(
+            self.data_series, self.quantile_values, weight_lower=weight_lower
+        )
+
+    def classify_cols_by_quantile_(self):
+        self.quantile_index_series = self.data_series.apply(
+            self.find_quantile, range_tuples=self.range_tuples
+        )
+        self.quantile_range_series = self.data_series.apply(
+            self.find_quantile, range_tuples=self.range_tuples, index=False
+        )
+
     @staticmethod
     def get_quantiles(data_series, quantile_list):
         """Output list of quantile values.
@@ -95,9 +129,9 @@ class QuantileClass:
         for i in quantile_list:
             quantile_values.append(data_series.quantile(q=i))
         return quantile_values
-    
+
     @staticmethod
-    def get_number_in_range(data_series:pd.Series, range:tuple):
+    def get_number_in_range(data_series: pd.Series, range: tuple):
         """Get number of data points in series within given range, a closed interval.
 
         Parameters
@@ -114,13 +148,13 @@ class QuantileClass:
         """
         data_in_range = data_series[
             (data_series >= range[0]) & (data_series <= range[1])
-            ]
+        ]
         return len(data_in_range)
-    
-    
+
     @classmethod
-    def get_number_per_quantile(cls, data_series:pd.Series, quantile_values:list,
-                                weight_lower=False):
+    def get_number_per_quantile(
+        cls, data_series: pd.Series, quantile_values: list, weight_lower=False
+    ):
         """Gives number of data entries for each given quantile. 
 
         Parameters
@@ -138,25 +172,47 @@ class QuantileClass:
         pd.DataFrame
             DataFrame with range tuples as index and number of entries as column.
         """
-        quantile_values = [data_series.min()] + quantile_values + [data_series.max()]
+
+        range_list = cls.get_range_tuples(data_series, quantile_values, weight_lower)
         ranges_dict = {}
-        for i in range(0, len(quantile_values)-1):
+        for range_tuple in range_list:
+            ranges_dict[range_tuple] = cls.get_number_in_range(data_series, range_tuple)
+        ranges_df = pd.DataFrame.from_dict(
+            ranges_dict, orient="index", columns=["count"]
+        )
+        ranges_df.index.name = "range"
+        return ranges_df
+
+    @staticmethod
+    def get_range_tuples(
+        data_series: pd.Series, quantile_values: list, weight_lower=False
+    ):
+        quantile_values = [data_series.min()] + quantile_values + [data_series.max()]
+        range_list = []
+        for i in range(0, len(quantile_values) - 1):
             if not weight_lower:
                 lower = quantile_values[i]
-                if (i+2) == len(quantile_values):
-                    upper = quantile_values[i+1]
+                if (i + 2) == len(quantile_values):
+                    upper = quantile_values[i + 1]
                 else:
-                    upper = data_series[data_series < quantile_values[i+1]].max()
+                    upper = data_series[data_series < quantile_values[i + 1]].max()
             else:
                 if i == 0:
                     lower = quantile_values[i]
                 else:
                     lower = data_series[data_series > quantile_values[i]].min()
-                upper = quantile_values[i+1]
-            ranges_dict[f"{(lower, upper)}"] = cls.get_number_in_range(data_series, (lower, upper))
-        ranges_df = pd.DataFrame.from_dict(ranges_dict, orient='index', columns=['count'])
-        ranges_df.index.name = 'range'
-        return ranges_df
+                upper = quantile_values[i + 1]
+            range_list.append((lower, upper))
+        return range_list
+
+    @staticmethod
+    def find_quantile(value, range_tuples, index=True):
+        for i, range_tuple in enumerate(range_tuples):
+            if range_tuple[0] <= value <= range_tuple[1]:
+                if index:
+                    return i
+                else:
+                    return range_tuple
 
 
 class RedditRegression(TimestampClass):
@@ -497,17 +553,16 @@ class RedditRegression(TimestampClass):
 
         # get model data
         self.get_regression_model_data()
-        
+
         # get validation data
         if "validation_window" in self.regression_params:
             self.get_regression_model_data(calval="val")
-        
+
         # if scaling, perform now
         if self.regression_params["scale"]:
             self.perform_scaling()
         else:
             self.__model_data__ = self.model_data
-        
 
         # if need FSS, run FSS
         if "FSS" in self.regression_params:
@@ -539,26 +594,20 @@ class RedditRegression(TimestampClass):
         self.scale_metrics_dict = {}
         self.scaled_data = {}
         for calval in self.model_data:
-            x_data = self.model_data[calval][self.regression_params['x_cols']]
+            x_data = self.model_data[calval][self.regression_params["x_cols"]]
             scaled_x_data, self.scale_metrics_dict[calval] = self.scale_data(x_data)
-            y_data = self.model_data[calval][[self.regression_params['y_col']]]
-            self.scaled_data[calval] = pd.concat(
-                (y_data, scaled_x_data), axis=1
-            )
+            y_data = self.model_data[calval][[self.regression_params["y_col"]]]
+            self.scaled_data[calval] = pd.concat((y_data, scaled_x_data), axis=1)
         self.__model_data__ = self.scaled_data
-
-
 
     @staticmethod
     def scale_data(x_data):
         scaler = preprocessing.StandardScaler().fit(x_data)
-        scaler_info = {
-            'mean': scaler.mean_,
-            'scale': scaler.scale_
-        }
-        x_scaled = pd.DataFrame(scaler.transform(x_data), columns=x_data.columns, index=x_data.index)
+        scaler_info = {"mean": scaler.mean_, "scale": scaler.scale_}
+        x_scaled = pd.DataFrame(
+            scaler.transform(x_data), columns=x_data.columns, index=x_data.index
+        )
         return x_scaled, scaler_info
-
 
     def get_regression_model_data(self, date_index=0, calval="cal"):
         """Get regression data for model window only, and merge with author data from
@@ -692,7 +741,7 @@ class RedditRegression(TimestampClass):
         """
         smf_model = (
             getattr(smf, self.SMF_FUNCTIONS[self.regression_params["regression_type"]])(
-                self.sm_modstrings[mod_key], data=self.__model_data__['cal']
+                self.sm_modstrings[mod_key], data=self.__model_data__["cal"]
             )
         ).fit()
 
@@ -715,28 +764,25 @@ class RedditRegression(TimestampClass):
             "r2": metrics.r2_score,
         }
 
-        y_pred = {'cal': smf_model.predict()}
+        y_pred = {"cal": smf_model.predict()}
 
         if "validation_window" in self.regression_params:
-            y_pred['val'] = smf_model.predict(
-                exog=self.__model_data__['val']
-                )
+            y_pred["val"] = smf_model.predict(exog=self.__model_data__["val"])
 
-        
         for metric in self.regression_params["metrics"]:
             if metric in self.SMF_PARAMS_LOOKUP:
-                model_results[metric] = getattr(smf_model, self.SMF_PARAMS_LOOKUP[metric])
+                model_results[metric] = getattr(
+                    smf_model, self.SMF_PARAMS_LOOKUP[metric]
+                )
             elif metric in custom_params:
                 for calval in y_pred:
                     model_results["metric"] = getattr(
-                        custom_params[metric], self.__model_data__[calval][
-                            self.regression_params['y_col']
-                        ], y_pred[calval]
+                        custom_params[metric],
+                        self.__model_data__[calval][self.regression_params["y_col"]],
+                        y_pred[calval],
                     )
             else:
                 print(f"{metric} unknown. Not calculated.")
-
-                
 
         stderr = pd.Series(
             np.sqrt(np.diag(smf_model.cov_params())), index=smf_model.params.index
@@ -758,8 +804,8 @@ class RedditRegression(TimestampClass):
             dictionary of model strings from FSS
         """
         self.FSS_metrics = self.forward_sequential_selection(
-            self.__model_data__['cal'][self.regression_params['x_cols']],
-            self.__model_data__['cal'][self.regression_params["y_col"]],
+            self.__model_data__["cal"][self.regression_params["x_cols"]],
+            self.__model_data__["cal"][self.regression_params["y_col"]],
             name=f"{self.regression_params['name']}",
             scoring_method=self.regression_params["performance_scoring_method"],
             model=self.SKL_FUNCTIONS[self.regression_params["regression_type"]],
@@ -1120,7 +1166,7 @@ class RedditRegression(TimestampClass):
         )
         df.index.name = "param"
         return df
-    
+
     @staticmethod
     def mnlogit_accuracy_score_from_y_pred(y_true, y_pred):
         y_pred = y_pred.idxmax(axis=1)
@@ -1134,17 +1180,14 @@ class RedditRegression(TimestampClass):
                 return 1
             else:
                 return 0
+
         auc_vals = []
         for i in y_pred.columns:
-            success_data = y_true.apply(assign_success_from_quartile,
-                                        quartile_index=i)
+            success_data = y_true.apply(assign_success_from_quartile, quartile_index=i)
             success_prediction = y_pred.loc[:, i]
-            auc = metrics.roc_auc_score(
-                success_data, success_prediction
-            )
+            auc = metrics.roc_auc_score(success_data, success_prediction)
             auc_vals.append(auc)
         return auc_vals
-        
 
     @staticmethod
     def get_score(row):
