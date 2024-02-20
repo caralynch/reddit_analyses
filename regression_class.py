@@ -71,6 +71,92 @@ class TimestampClass:
     @staticmethod
     def get_hour(timestamp):
         return timestamp.hour
+    
+class QuantileClass:
+    """Class for segmenting data into quantiles
+    """
+    @staticmethod
+    def get_quantiles(data_series, quantile_list):
+        """Output list of quantile values.
+
+        Parameters
+        ----------
+        data_series : pd.Series
+            Series (column of df) of data
+        quantile_list : list
+            List of quantiles (e.g. [0.25, 0.5, 0.75])
+
+        Returns
+        -------
+        list
+            Values of each quantile
+        """
+        quantile_values = []
+        for i in quantile_list:
+            quantile_values.append(data_series.quantile(q=i))
+        return quantile_values
+    
+    @staticmethod
+    def get_number_in_range(data_series:pd.Series, range:tuple):
+        """Get number of data points in series within given range, a closed interval.
+
+        Parameters
+        ----------
+        data_series : pd.Series
+            Data
+        range : tuple
+            Range of values to consider - considered a closed interval.
+
+        Returns
+        -------
+        int
+            Number of entries in data_series within the given range
+        """
+        data_in_range = data_series[
+            (data_series >= range[0]) & (data_series <= range[1])
+            ]
+        return len(data_in_range)
+    
+    
+    @classmethod
+    def get_number_per_quantile(cls, data_series:pd.Series, quantile_values:list,
+                                weight_lower=False):
+        """Gives number of data entries for each given quantile. 
+
+        Parameters
+        ----------
+        data_series : pd.Series
+            Data for quantiles
+        quantile_values : list
+            List of values of quantiles
+        weight_lower : bool
+            Dictates whether range intervals are open or closed
+        
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with range tuples as index and number of entries as column.
+        """
+        quantile_values = [data_series.min()] + quantile_values + [data_series.max()]
+        ranges_dict = {}
+        for i in range(0, len(quantile_values)-1):
+            if not weight_lower:
+                lower = quantile_values[i]
+                if (i+2) == len(quantile_values):
+                    upper = quantile_values[i+1]
+                else:
+                    upper = data_series[data_series < quantile_values[i+1]].max()
+            else:
+                if i == 0:
+                    lower = quantile_values[i]
+                else:
+                    lower = data_series[data_series > quantile_values[i]].min()
+                upper = quantile_values[i+1]
+            ranges_dict[f"{(lower, upper)}"] = cls.get_number_in_range(data_series, (lower, upper))
+        ranges_df = pd.DataFrame.from_dict(ranges_dict, orient='index', columns=['count'])
+        ranges_df.index.name = 'range'
+        return ranges_df
 
 
 class RedditRegression(TimestampClass):
