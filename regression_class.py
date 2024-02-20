@@ -215,7 +215,7 @@ class QuantileClass:
                     return range_tuple
 
 
-class RedditRegression(TimestampClass):
+class RedditRegression(TimestampClass, QuantileClass):
     # if these cols are required they can be calculated
     COLUMN_FUNCTIONS = {
         "time_in_secs": TimestampClass.get_float_seconds,
@@ -236,6 +236,14 @@ class RedditRegression(TimestampClass):
         "bic": "bic",
         "r2": "rsquared",
     }
+
+    DEFAULT_Y_COL = {
+        "logistic": "success",
+        "linear": "thread_size",
+        "mnlogit": "thread_size",
+    }
+
+    DEFAULT_QUANTILES = [0.25, 0.5, 0.75]
 
     @staticmethod
     def mnlogit_accuracy_score(estimator, X, y):
@@ -269,6 +277,7 @@ class RedditRegression(TimestampClass):
             'performance_scoring_method': method used to score FSS,
             'x_cols': features to model (used when doing FSS),
             'y_col': success column (used when doing FSS),
+            'quantiles': list of quantiles to use for mnlogit, optional
             'models': models to use (used when not doing FSS)
             'metrics': list of metrics to output (AUC, AIC,...)
             'activity_threshold': nb of activities per week per author to include
@@ -280,8 +289,11 @@ class RedditRegression(TimestampClass):
 
         self.regression_data = regression_params["regression_data"]
 
+        # to avoid warning dating when creating new cols
+        pd.options.mode.chained_assignment = None
+
         # want sentiment in thread data to be one col
-        regression_params["thread_data"]["sentiment_score"] = regression_params[
+        regression_params["thread_data"].loc[:, "sentiment_score"] = regression_params[
             "thread_data"
         ].apply(self.get_score, axis=1)
 
@@ -296,6 +308,9 @@ class RedditRegression(TimestampClass):
         self.regression_metrics = {}
         self.model_data = {}
         self.num_threads_modelled = {}
+
+        # back to warning
+        pd.options.mode.chained_assignment = "warn"
 
     def construct_regression_params_dict(self, regression_params):
         """ Makes dict to keep track of regression params.
@@ -317,6 +332,13 @@ class RedditRegression(TimestampClass):
 
         self.add_params_for_FSS_or_models()
 
+        # add default quantiles for mnlogit data
+        if (
+            self.regression_params["regression_type"] == "mnlogit"
+            and "quantiles" not in self.regression_params
+        ):
+            self.regression_params["quantiles"] = self.DEFAULT_QUANTILES
+
         # author activity threshold
         if "activity_threshold" in self.regression_params:
             self.removed_threads = {}
@@ -324,6 +346,7 @@ class RedditRegression(TimestampClass):
     def add_params_for_FSS_or_models(self):
         """Adds required parameters and empty dicts for FSS true or false.
         """
+
         if "FSS" in self.regression_params and (self.regression_params["FSS"] == True):
             # if doing FSS, then need to create empty dicts for FSS metrics
             self.FSS_metrics = {}
@@ -343,7 +366,9 @@ class RedditRegression(TimestampClass):
 
             # there also needs to be x and y columns
             if "y_col" not in self.regression_params:
-                self.regression_params["y_col"] = "success"
+                self.regression_params["y_col"] = self.DEFAULT_Y_COL[
+                    self.regression_params["regression_type"]
+                ]
         else:
             # if not performing FSS, should have been given the models to run
             self.regression_params["x_cols"] = self.get_x_vals_from_modstring_dict(
@@ -666,12 +691,79 @@ class RedditRegression(TimestampClass):
         ]:
             model_data[col] = model_data.timestamp.apply(self.COLUMN_FUNCTIONS[col])
 
-        self.model_data[calval] = model_data
+        # if mnlogit, then need to classify y data
+        if self.regression_params["regression_type"] == "mnlogit":
+            model_data = self.get_y_col_quantiles(model_data, calval)
+            self.make_quantile_dfs()
 
         if calval == "cal":
             self.regression_model_data = model_data
         else:
             self.validation_data = model_data
+
+        self.model_data[calval] = model_data
+
+    def get_y_col_quantiles(self, model_data, calval="cal"):
+        """If this is a multinomial logistic regression, then the y column needs to be
+        divided into classes - this is done with the model data, after threshold, to
+        obtain roughly equally sized classes. This updates the model data df by
+        classifying the y col into equal classes, creating a new column for it, and
+        updating the y_col entry in the regression params dict.
+
+        Parameters
+        ----------
+        model_data : pd.DataFrame
+            Given model data (which includes necessary y col)
+        calval : str
+            Indicates whether this is calibration or validation data
+
+        Returns
+        -------
+        pd.DataFrame
+            Model data with an additional column corresponding to the new y column.
+        """
+        y_col = self.regression_params["y_col"]
+        if calval == "cal":
+            self.regression_params["input_y_col"] = y_col
+            quantile_obj = QuantileClass(
+                model_data[y_col], self.regression_params["quantiles"]
+            )
+            quantile_data = quantile_obj.main()
+            y_col += "_quantile_index"
+            self.regression_params["y_col"] = y_col
+            model_data[y_col] = quantile_data["quantile_index_col"]
+            del quantile_data["quantile_index_col"]
+            self.quantile_data = quantile_data
+        else:
+            quantile_ranges = self.quantile_data["quantile_ranges"].copy()
+            input_y_col = self.regression_params["input_y_col"]
+            quantile_ranges = self.check_data_in_ranges(
+                model_data[input_y_col], quantile_ranges
+            )
+            self.quantile_data["val_quantile_ranges"] = quantile_ranges
+            model_data[y_col] = model_data[input_y_col].apply(
+                QuantileClass.find_quantile, range_tuples=quantile_ranges
+            )
+        return model_data
+
+    def make_quantile_dfs(self):
+        ranges_dict = {
+            x: self.quantile_data[x] for x in self.quantile_data if "ranges" in x
+        }
+        self.quantile_metrics = {
+            "ranges": pd.DataFrame(ranges_dict),
+            "counts": self.quantile_data["quantile_counts"],
+        }
+
+    @staticmethod
+    def check_data_in_ranges(data: pd.Series, range_tuples: list):
+        # if there are smaller numbers in the data range, then extend first bin
+        if data.min() < range_tuples[0][0]:
+            range_tuples[0] = (data.min(), range_tuples[0][1])
+        # if there are larger numbers in the data range, then extend the last bin
+        if data.max() > range_tuples[-1][1]:
+            range_tuples[-1] = (range_tuples[-1][0], data.max())
+        return range_tuples
 
     def merge_author_and_model_data(
         self, model_data: pd.DataFrame, thread_data_cols: list, calval: str
@@ -878,6 +970,12 @@ class RedditRegression(TimestampClass):
             self.params_dict_to_df(self.regression_params).to_excel(
                 writer, sheet_name="inputs"
             )
+            if self.regression_params["regression_type"] == "mnlogit":
+                # if mnlogit, output quantile metrics
+                for key in self.quantile_metrics:
+                    self.quantile_metrics[key].to_excel(
+                        writer, sheet_name=f"quantile_{key}"
+                    )
             if "FSS" in self.regression_params:
                 if self.regression_params["FSS"] == True:
                     if type(self.FSS_metrics_df) is dict:
