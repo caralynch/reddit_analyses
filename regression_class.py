@@ -284,10 +284,9 @@ class RedditRegression(TimestampClass, QuantileClass):
                                 (optional)
             'scale': True if wish to use sklearn's scaler in preprocessing.
         """
-        # construct regression params dict
-        self.construct_regression_params_dict(regression_params)
 
         self.regression_data = regression_params["regression_data"]
+        del regression_params["regression_data"]
 
         # to avoid warning dating when creating new cols
         pd.options.mode.chained_assignment = None
@@ -301,6 +300,11 @@ class RedditRegression(TimestampClass, QuantileClass):
         self.thread_data = regression_params["thread_data"][
             ["thread_id", "id", "timestamp", "author", "sentiment_score"]
         ]
+
+        del regression_params["thread_data"]
+
+        # construct regression params dict
+        self.construct_regression_params_dict(regression_params)
 
         self.manage_dates_and_windows()
 
@@ -596,14 +600,25 @@ class RedditRegression(TimestampClass, QuantileClass):
         else:
             self.sm_modstrings = self.regression_params["models"]
 
+        # run models
+        self.run_models()
+
+    def run_models(self):
+        """Run models from obtained modstrings. Save metrics to regression_metrics dict.
+        """
+
         # iterate through each model
         model_results = {}
         param_dict = {}
+        self.smf_models = {}
         for mod_key in self.sm_modstrings:
             print(f"Model {mod_key}")
-            regression_out_dict = self.run_regression(mod_key)
-            model_results[mod_key] = regression_out_dict["model_metrics"]
-            param_dict[mod_key] = regression_out_dict["regression_params"]
+            self.smf_models[mod_key], model_results[mod_key] = self.run_regression(
+                mod_key
+            )
+            param_dict[mod_key] = self.get_model_metrics_from_smf_mod(
+                self.smf_models[mod_key]
+            )
 
         # convert model metrics dict to df
         model_results = pd.DataFrame.from_dict(model_results, orient="index")
@@ -612,6 +627,54 @@ class RedditRegression(TimestampClass, QuantileClass):
             "regression_params": param_dict,
             "metrics": model_results,
         }
+
+    def get_model_metrics_from_smf_mod(self, smf_mod, conf_int=0.05):
+        """Creates parameter dataframe of model metrics for easy output.
+
+        Parameters
+        ----------
+        smf_mod : smf.ModelResults
+            smf ModelResults instance.
+        conf_int : float, optional
+            Confidence interval alpha, by default 0.05
+
+        Returns
+        -------
+        pd.DataFrame
+            Dataframe with regression parameters, p values and stderr or conf interval.
+        """
+
+        if self.regression_params["regression_type"] != "mnlogit":
+            stderr = pd.Series(
+                np.sqrt(np.diag(smf_mod.cov_params())), index=smf_mod.params.index
+            )
+            params_df = pd.DataFrame(
+                [smf_mod.params, stderr, smf_mod.pvalues]
+            ).T.rename(columns={0: "param", 1: "stderr", 2: "pvalue"})
+
+        else:
+            lookup = {
+                "p_value": smf_mod.pvalues.T,
+                "param": smf_mod.params.T,
+            }
+
+            params_df = smf_mod.conf_int(alpha=conf_int).copy()
+            params_df.rename(
+                columns={"lower": "conf_low", "upper": "conf_high"}, inplace=True
+            )
+
+            for key in lookup:
+                params_df[key] = ""
+
+            for index_tuple in params_df.index:
+                i = index_tuple[0]
+                val = index_tuple[1]
+                for key in lookup:
+                    params_df.loc[(i, val), key] = lookup[key].loc[int(i) - 1, val]
+
+            params_df = params_df[["param", "p_value", "conf_low", "conf_high"]]
+
+        return params_df
 
     def perform_scaling(self):
         """Scale x column data using standard sklean Standard Scaler
@@ -694,7 +757,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         # if mnlogit, then need to classify y data
         if self.regression_params["regression_type"] == "mnlogit":
             model_data = self.get_y_col_quantiles(model_data, calval)
-            self.make_quantile_dfs()
+            self.get_quantile_metrics()
 
         if calval == "cal":
             self.regression_model_data = model_data
@@ -737,23 +800,23 @@ class RedditRegression(TimestampClass, QuantileClass):
         else:
             quantile_ranges = self.quantile_data["quantile_ranges"].copy()
             input_y_col = self.regression_params["input_y_col"]
-            quantile_ranges = self.check_data_in_ranges(
+            quantile_ranges, counts = self.check_data_in_ranges(
                 model_data[input_y_col], quantile_ranges
             )
             self.quantile_data["val_quantile_ranges"] = quantile_ranges
+            self.quantile_data["quantile_counts"]["val_count"] = counts
             model_data[y_col] = model_data[input_y_col].apply(
                 QuantileClass.find_quantile, range_tuples=quantile_ranges
             )
         return model_data
 
-    def make_quantile_dfs(self):
+    def get_quantile_metrics(self):
         ranges_dict = {
             x: self.quantile_data[x] for x in self.quantile_data if "ranges" in x
         }
-        self.quantile_metrics = {
-            "ranges": pd.DataFrame(ranges_dict),
-            "counts": self.quantile_data["quantile_counts"],
-        }
+        ranges_df = pd.DataFrame(ranges_dict)
+        count_df = self.quantile_data["quantile_counts"].copy().reset_index(drop=True)
+        self.quantile_metrics = pd.concat((ranges_df, count_df), axis=1)
 
     @staticmethod
     def check_data_in_ranges(data: pd.Series, range_tuples: list):
@@ -763,7 +826,11 @@ class RedditRegression(TimestampClass, QuantileClass):
         # if there are larger numbers in the data range, then extend the last bin
         if data.max() > range_tuples[-1][1]:
             range_tuples[-1] = (range_tuples[-1][0], data.max())
-        return range_tuples
+        counts = []
+        for range_tuple in range_tuples:
+            counts.append(QuantileClass.get_number_in_range(data, range_tuple))
+
+        return range_tuples, counts
 
     def merge_author_and_model_data(
         self, model_data: pd.DataFrame, thread_data_cols: list, calval: str
@@ -828,8 +895,9 @@ class RedditRegression(TimestampClass, QuantileClass):
         
         Returns
         -------
-        Dict
-            With 'model metrics' and 'regression params' keys
+        smf.ModelResults
+            The ModelResults instance of the model run.
+            
         """
         smf_model = (
             getattr(smf, self.SMF_FUNCTIONS[self.regression_params["regression_type"]])(
@@ -852,14 +920,17 @@ class RedditRegression(TimestampClass, QuantileClass):
         custom_params = {
             "auc": metrics.roc_auc_score,
             "mnlogit_accuracy": self.mnlogit_accuracy_score_from_y_pred,
-            "mnlogit_auc": self.mnlogit_aucs,
+            "mnlogit_aucs": self.mnlogit_aucs,
+            "mnlogit_mean_auc": self.mnlogit_mean_auc,
             "r2": metrics.r2_score,
         }
 
-        y_pred = {"cal": smf_model.predict()}
+        y_pred = {"cal": pd.DataFrame(smf_model.predict())}
 
         if "validation_window" in self.regression_params:
-            y_pred["val"] = smf_model.predict(exog=self.__model_data__["val"])
+            y_pred["val"] = pd.DataFrame(
+                smf_model.predict(exog=self.__model_data__["val"])
+            ).reset_index(drop=True)
 
         for metric in self.regression_params["metrics"]:
             if metric in self.SMF_PARAMS_LOOKUP:
@@ -867,24 +938,19 @@ class RedditRegression(TimestampClass, QuantileClass):
                     smf_model, self.SMF_PARAMS_LOOKUP[metric]
                 )
             elif metric in custom_params:
+
                 for calval in y_pred:
-                    model_results["metric"] = getattr(
-                        custom_params[metric],
-                        self.__model_data__[calval][self.regression_params["y_col"]],
-                        y_pred[calval],
+
+                    y_true = self.__model_data__[calval][
+                        self.regression_params["y_col"]
+                    ].reset_index(drop=True)
+                    model_results[f"{calval}_{metric}"] = custom_params[metric](
+                        y_true, y_pred[calval],
                     )
             else:
                 print(f"{metric} unknown. Not calculated.")
 
-        stderr = pd.Series(
-            np.sqrt(np.diag(smf_model.cov_params())), index=smf_model.params.index
-        )
-        param_df = pd.DataFrame([smf_model.params, stderr, smf_model.pvalues]).T.rename(
-            columns={0: "param", 1: "stderr", 2: "pvalue"}
-        )
-
-        out_dict = {"model_metrics": model_results, "regression_params": param_df}
-        return out_dict
+        return smf_model, model_results
 
     def run_FSS(self):
         """Run Forward Sequential Selection, adding metrics to self.FSS_metrics dict,
@@ -897,7 +963,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         """
         self.FSS_metrics = self.forward_sequential_selection(
             self.__model_data__["cal"][self.regression_params["x_cols"]],
-            self.__model_data__["cal"][self.regression_params["y_col"]],
+            self.__model_data__["cal"][self.regression_params["y_col"]].ravel(),
             name=f"{self.regression_params['name']}",
             scoring_method=self.regression_params["performance_scoring_method"],
             model=self.SKL_FUNCTIONS[self.regression_params["regression_type"]],
@@ -972,10 +1038,7 @@ class RedditRegression(TimestampClass, QuantileClass):
             )
             if self.regression_params["regression_type"] == "mnlogit":
                 # if mnlogit, output quantile metrics
-                for key in self.quantile_metrics:
-                    self.quantile_metrics[key].to_excel(
-                        writer, sheet_name=f"quantile_{key}"
-                    )
+                self.quantile_metrics.to_excel(writer, sheet_name=f"quantile_metrics")
             if "FSS" in self.regression_params:
                 if self.regression_params["FSS"] == True:
                     if type(self.FSS_metrics_df) is dict:
@@ -1286,6 +1349,10 @@ class RedditRegression(TimestampClass, QuantileClass):
             auc = metrics.roc_auc_score(success_data, success_prediction)
             auc_vals.append(auc)
         return auc_vals
+
+    @classmethod
+    def mnlogit_mean_auc(cls, y_true, y_pred):
+        return np.mean(cls.mnlogit_aucs(y_true, y_pred))
 
     @staticmethod
     def get_score(row):
