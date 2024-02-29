@@ -14,7 +14,8 @@ class RedditData:
     def __init__(
         self,
         filename=None,
-        sentiment_cols=[], index_cols=[],
+        sentiment_cols=[],
+        index_cols=[],
         dataframe=pd.DataFrame(),
         name=None,
         **kwargs,
@@ -93,7 +94,7 @@ class RedditData:
     def authors(self):
         """Unique authors in data"""
         return self.data.author.unique()
-    
+
     @property
     def comment_authors(self):
         """Unique comment authors in data"""
@@ -123,7 +124,7 @@ class RedditData:
             )
         ]
         return bot_comments
-    
+
     @property
     def post_bot_rows(self):
         """Posts in data identified as bot submissions"""
@@ -144,13 +145,13 @@ class RedditData:
     @property
     def deleted_rows(self):
         """Rows in data that have been removed (by mods) or deleted (by author)"""
-        #deleted_posts = self.data[
-            #((self.data.subject == "[deleted]") | (self.data.subject == "[removed]"))
-        #]
+        # deleted_posts = self.data[
+        # ((self.data.subject == "[deleted]") | (self.data.subject == "[removed]"))
+        # ]
         deleted_rest = self.data[
             ((self.data.body == "[deleted]") | (self.data.body == "[removed]"))
         ]
-        #return pd.concat((deleted_posts, deleted_rest))
+        # return pd.concat((deleted_posts, deleted_rest))
         return deleted_rest
 
     def summary(self):
@@ -168,24 +169,22 @@ class RedditData:
         (start_time, end_time) = self.times
 
         data_dict = {
-            'rows': [self.rows],
-            'comments': [len(self.comments)],
-            'posts': [len(self.posts)],
-            'start_time': [start_time],
-            'end_time': [end_time],
-            'total_time': [end_time - start_time],
-            'unique_authors': [len(self.authors)],
-            'unique_post_authors': [len(self.post_authors)],
-            'unique_comment_authors': [len(self.comment_authors)],
-            'unique_domains': [len(self.domains)],
-            'bot_posts': [len(self.post_bot_rows)],
-            'bot_comments': [len(self.comment_bot_rows)],
-            'deleted_comments': [len(self.deleted_rows)],
+            "rows": [self.rows],
+            "comments": [len(self.comments)],
+            "posts": [len(self.posts)],
+            "start_time": [start_time],
+            "end_time": [end_time],
+            "total_time": [end_time - start_time],
+            "unique_authors": [len(self.authors)],
+            "unique_post_authors": [len(self.post_authors)],
+            "unique_comment_authors": [len(self.comment_authors)],
+            "unique_domains": [len(self.domains)],
+            "bot_posts": [len(self.post_bot_rows)],
+            "bot_comments": [len(self.comment_bot_rows)],
+            "deleted_comments": [len(self.deleted_rows)],
         }
 
-
         return pd.DataFrame.from_dict(data_dict)
-        
 
     def group_by_col(self, groupby_col: str, cols=None, operation="count"):
         """Groups specified columns of dataframe by given groupby column to get counts,
@@ -344,9 +343,7 @@ class RedditData:
         """
         if not ax:
             ax = plt.subplot()
-        self.data[col].hist(
-            grid=grid, log=log, bins=bins, ax=ax, **kwargs
-        )
+        self.data[col].hist(grid=grid, log=log, bins=bins, ax=ax, **kwargs)
         if title:
             ax.set_title(title)
         if not y_name:
@@ -387,7 +384,12 @@ class RedditData:
         return sentiment_scores
 
     def read_reddit_data(
-        self, csv_name: str, sentiment_cols=False, index_cols=False, shorten_parent=False, **kwargs
+        self,
+        csv_name: str,
+        sentiment_cols=False,
+        index_cols=False,
+        shorten_parent=False,
+        **kwargs,
     ) -> pd.DataFrame:
         """Read in a reddit dataset csv and set columns to correct formats.
 
@@ -411,7 +413,7 @@ class RedditData:
         if sentiment_cols:
             for col in sentiment_cols:
                 data_col_dtypes[col] = float
-            
+
         if index_cols:
             for col in index_cols:
                 data_col_dtypes[col] = float
@@ -428,7 +430,7 @@ class RedditData:
 
         # change parent ids to true thread ids
         if shorten_parent:
-            data['parent'] = data.parent.str[3:]
+            data["parent"] = data.parent.str[3:]
 
         return data
 
@@ -442,12 +444,16 @@ class RedditData:
             Reddit dataset with added body and subject sentiment score columns.
         """
         analyzer = SentimentIntensityAnalyzer()
-        
+
         # analyse post titles
-        self.data["subject_sentiment_score"] = self.data.subject.apply(self.compound_body_sentiment, args=(analyzer,))
+        self.data["subject_sentiment_score"] = self.data.subject.apply(
+            self.compound_body_sentiment, args=(analyzer,)
+        )
 
         # analyse post and comment bodies
-        self.data["body_sentiment_score"] = self.data.body.apply(self.compound_body_sentiment, args=(analyzer,))
+        self.data["body_sentiment_score"] = self.data.body.apply(
+            self.compound_body_sentiment, args=(analyzer,)
+        )
 
         # update comments and posts dataframes
         self.update_comments_posts()
@@ -488,7 +494,7 @@ class RedditData:
             return mean(compound_scores)
         else:
             return np.nan
-    
+
     @staticmethod
     def UTC_to_EDT(df_timestamp_col: pd.Series):
         """Conversts timestamps from UTC to EDT
@@ -505,10 +511,10 @@ class RedditData:
         """
 
         def get_EDT_time(row):
-            return (row - pd.Timedelta(4, unit='h'))
-        
+            return row - pd.Timedelta(4, unit="h")
+
         return df_timestamp_col.apply(get_EDT_time)
-    
+
     @staticmethod
     def get_hour(row):
         return row.hour
@@ -516,30 +522,21 @@ class RedditData:
     @staticmethod
     def get_time(row):
         return row.time()
-    
+
     @staticmethod
     def get_dayofweek(df_timestamp_col: pd.Series):
-        
         def get_day(row):
             return row.dayofweek
-        
-        daysofweek = {
-            0: 'M',
-            1: 'Tu',
-            2: 'W',
-            3: 'Th',
-            4: 'F',
-            5: 'Sa',
-            6: 'Su'
-            }
+
+        daysofweek = {0: "M", 1: "Tu", 2: "W", 3: "Th", 4: "F", 5: "Sa", 6: "Su"}
 
         return df_timestamp_col.apply(get_day).map(daysofweek)
-    
+
     @staticmethod
     def conv_to_datetime(row):
         my_day = datetime.date(2020, 1, 1)
         return datetime.datetime.combine(my_day, row)
-    
+
     @staticmethod
     def conv_date2num(row):
         return row.date2num(time_data)
