@@ -865,8 +865,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         return model_data
 
     def merge_author_and_model_data(
-        self, model_data: pd.DataFrame, thread_data_cols: list, calval: str
-    ):
+        self, model_data: pd.DataFrame, thread_data_cols: list):
         """Merges author data calculated with thread_data, with the given model_data.
         Performs a left hand merge with model data, such that only threads are left.
         Only merges columns that are specified in the regression params.
