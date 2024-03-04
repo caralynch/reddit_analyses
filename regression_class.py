@@ -810,6 +810,8 @@ class RedditRegression(TimestampClass, QuantileClass):
         return model_data
 
     def get_quantile_metrics(self):
+        """Creates a self.quantile_metrics df to store quantile metrics for easy output & readability.
+        """
         ranges_dict = {
             x: self.quantile_data[x] for x in self.quantile_data if "ranges" in x
         }
@@ -819,6 +821,22 @@ class RedditRegression(TimestampClass, QuantileClass):
 
     @staticmethod
     def check_data_in_ranges(data: pd.Series, range_tuples: list):
+        """Checks the given data is in the given ranges, if not it extends the ranges
+        by either lowering the start of the first interval or raising the end of the
+        last interval, or both. Also calculates data counts in each interval.
+
+        Parameters
+        ----------
+        data : pd.Series
+            Data to segment.
+        range_tuples : list
+            List of tuples representing intervals.
+
+        Returns
+        -------
+        list(tuple), list(int)
+            Returns the updated list of range tuples and data points in each interval.
+        """
         # if there are smaller numbers in the data range, then extend first bin
         if data.min() < range_tuples[0][0]:
             range_tuples[0] = (data.min(), range_tuples[0][1])
