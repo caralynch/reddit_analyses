@@ -27,14 +27,7 @@ from mlxtend.plotting import plot_sequential_feature_selection as plot_sfs
 
 """
 ### TODO ###
-
-Add multinomial logistic regression:
-    - assume threads will have already been binned, and the bins are numbered (indices) - also assume bins have roughly equal weights
-    - add function to calculate AUC for multinomial logreg
-        - need to assign success for each quartile
-        - also get success prediction for each quartile (mnlogit predict yields 4 numbers - one for each bin, but check this)
-        - get AUCs for all quartiles (from sklearn metrics)
-        - use average over all classes??
+Add thread size thresholding
 Add domain tracker - e.g. domain frequency or something?
 """
 
@@ -745,8 +738,14 @@ class RedditRegression(TimestampClass, QuantileClass):
         # features)
         if len(thread_data_cols) > 1:
             model_data = self.merge_author_and_model_data(
-                model_data, thread_data_cols, calval
+                model_data, thread_data_cols
             )
+        
+        # if there's an author activity threshold, perform thresholding
+        if "activity_threshold" in self.regression_params:
+            model_data = self.perform_author_thresholding(
+                model_data, calval
+                )
 
         # make other required cols
         for col in [
@@ -831,6 +830,39 @@ class RedditRegression(TimestampClass, QuantileClass):
             counts.append(QuantileClass.get_number_in_range(data, range_tuple))
 
         return range_tuples, counts
+    
+    def perform_author_thresholding(self, model_data: pd.DataFrame, calval: str):
+        """Performs author activity thresholding on given model data. Also saves removed
+        threads to removed_threads.
+
+        Parameters
+        ----------
+        model_data : pd.DataFrame
+            Model data to perform author activity thresholding on.
+        calval : str
+            Whether data is cal or val.
+
+        Returns
+        -------
+        pd.DataFrame
+            Model data with thresholding applied.
+        """
+        # if thresholding by author activity, remove threads where author activity
+        # is less than threshold as these cannot be modelled
+        if "activity_threshold" in self.regression_params:
+            threshold = self.regression_params["activity_threshold"]
+            # print(f"Performing thresholding")
+            self.removed_threads[calval] = model_data.loc[
+                model_data.author_all_activity_count < threshold, :
+            ]
+            model_data = model_data.loc[
+                model_data.author_all_activity_count >= threshold, :
+            ]
+
+        # drop cols unnecessary for modelling, kept only for thresholding
+        if "author_all_activity_count" not in self.regression_params["x_cols"]:
+            model_data.drop(labels=["author_all_activity_count"], axis=1, inplace=True)
+        return model_data
 
     def merge_author_and_model_data(
         self, model_data: pd.DataFrame, thread_data_cols: list, calval: str
@@ -838,7 +870,6 @@ class RedditRegression(TimestampClass, QuantileClass):
         """Merges author data calculated with thread_data, with the given model_data.
         Performs a left hand merge with model data, such that only threads are left.
         Only merges columns that are specified in the regression params.
-        Also performs author activity thresholding.
 
         Parameters
         ----------
@@ -852,7 +883,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         Returns
         -------
         pd.DataFrame
-            model data with required author columns and thresholds applied
+            model data with required author columns
         """
         model_data = model_data.merge(
             self.thread_data[thread_data_cols],
@@ -861,25 +892,7 @@ class RedditRegression(TimestampClass, QuantileClass):
             how="left",
         )
 
-        # if thresholding by author activity, remove threads where author activity
-        # is less than threshold as these cannot be modelled
-        if "activity_threshold" in self.regression_params:
-            threshold = self.regression_params["activity_threshold"]
-            # print(f"Performing thresholding")
-            self.removed_threads[calval] = model_data.loc[
-                model_data.author_all_activity_count < threshold, :
-            ]
-            model_data = model_data.loc[
-                model_data.author_all_activity_count >= threshold, :
-            ]
-
-        # drop cols unnecessary for modelling
-        to_drop = ["id"]
-        if ("author_all_activity_count" in thread_data_cols) & (
-            "author_all_activity_count" not in self.regression_params["x_cols"]
-        ):
-            to_drop += ["author_all_activity_count"]
-        model_data.drop(labels=to_drop, axis=1, inplace=True)
+        model_data.drop(labels=['id'], axis=1, inplace=True)
 
         return model_data
 
