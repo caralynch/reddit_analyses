@@ -9,3 +9,4 @@
 !*regression_data.p
 *.pyc
 !plotting_metrics.p
+!test*.p
