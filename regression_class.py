@@ -972,11 +972,7 @@ class RedditRegression(TimestampClass, QuantileClass):
             ).reset_index(drop=True)
 
         for metric in self.regression_params["metrics"]:
-            if metric in self.SMF_PARAMS_LOOKUP:
-                model_results[metric] = getattr(
-                    smf_model, self.SMF_PARAMS_LOOKUP[metric]
-                )
-            elif metric in custom_params:
+            if metric in custom_params:
 
                 for calval in y_pred:
 
@@ -986,6 +982,10 @@ class RedditRegression(TimestampClass, QuantileClass):
                     model_results[f"{calval}_{metric}"] = custom_params[metric](
                         y_true, y_pred[calval],
                     )
+            elif metric in self.SMF_PARAMS_LOOKUP:
+                model_results[metric] = getattr(
+                    smf_model, self.SMF_PARAMS_LOOKUP[metric]
+                )
             else:
                 print(f"{metric} unknown. Not calculated.")
 
