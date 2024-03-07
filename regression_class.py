@@ -1,7 +1,6 @@
 # data types
 import numpy as np
 import pandas as pd
-from reddit_dataclass import RedditData as reddit
 import datetime
 
 # I/O
@@ -273,8 +272,7 @@ class RedditRegression(TimestampClass, QuantileClass):
             'quantiles': list of quantiles to use for mnlogit, optional
             'models': models to use (used when not doing FSS)
             'metrics': list of metrics to output (AUC, AIC,...)
-            'activity_threshold': nb of activities per week per author to include
-                                (optional)
+            'thresholds': dict of thresholds to include on model data, in the format key = column name to be thresholded and value = threshold value, with model data filtered such that only rows above or including that value are included.
             'scale': True if wish to use sklearn's scaler in preprocessing.
         """
 
@@ -337,7 +335,7 @@ class RedditRegression(TimestampClass, QuantileClass):
             self.regression_params["quantiles"] = self.DEFAULT_QUANTILES
 
         # author activity threshold
-        if "activity_threshold" in self.regression_params:
+        if "thresholds" in self.regression_params:
             self.removed_threads = {}
 
     def add_params_for_FSS_or_models(self):
@@ -360,6 +358,9 @@ class RedditRegression(TimestampClass, QuantileClass):
                 self.regression_params[
                     "performance_scoring_method"
                 ] = self.PERFORMANCE_SCORING_METHODS["mnlogit"]
+                self.regression_params[
+                    "performance_scoring_method_str"
+                ] = "accuracy_score"
 
             # there also needs to be x and y columns
             if "y_col" not in self.regression_params:
@@ -728,24 +729,20 @@ class RedditRegression(TimestampClass, QuantileClass):
             x for x in self.thread_data.columns if x in self.regression_params["x_cols"]
         ]
 
-        # need to add author_all_activity_count for filtering purposes if thresholding
-        if ("activity_threshold" in self.regression_params) & (
-            "author_all_activity_count" not in thread_data_cols
-        ):
-            thread_data_cols += ["author_all_activity_count"]
+        # need to add columns for filtering purposes if thresholding
+        if "thresholds" in self.regression_params:
+            for key in self.regression_params["thresholds"]:
+                if (key not in thread_data_cols) & (key not in model_data.columns):
+                    thread_data_cols += [key]
 
         # only if there are actually thread cols to add (so if considering author
         # features)
         if len(thread_data_cols) > 1:
-            model_data = self.merge_author_and_model_data(
-                model_data, thread_data_cols
-            )
-        
+            model_data = self.merge_author_and_model_data(model_data, thread_data_cols)
+
         # if there's an author activity threshold, perform thresholding
-        if "activity_threshold" in self.regression_params:
-            model_data = self.perform_author_thresholding(
-                model_data, calval
-                )
+        if "thresholds" in self.regression_params:
+            model_data = self.perform_thresholding(model_data, calval)
 
         # make other required cols
         for col in [
@@ -848,9 +845,9 @@ class RedditRegression(TimestampClass, QuantileClass):
             counts.append(QuantileClass.get_number_in_range(data, range_tuple))
 
         return range_tuples, counts
-    
-    def perform_author_thresholding(self, model_data: pd.DataFrame, calval: str):
-        """Performs author activity thresholding on given model data. Also saves removed
+
+    def perform_thresholding(self, model_data: pd.DataFrame, calval: str):
+        """Performs all relevant thresholding on given model data. Also saves removed
         threads to removed_threads.
 
         Parameters
@@ -865,25 +862,37 @@ class RedditRegression(TimestampClass, QuantileClass):
         pd.DataFrame
             Model data with thresholding applied.
         """
-        # if thresholding by author activity, remove threads where author activity
-        # is less than threshold as these cannot be modelled
-        if "activity_threshold" in self.regression_params:
-            threshold = self.regression_params["activity_threshold"]
-            # print(f"Performing thresholding")
-            self.removed_threads[calval] = model_data.loc[
-                model_data.author_all_activity_count < threshold, :
-            ]
-            model_data = model_data.loc[
-                model_data.author_all_activity_count >= threshold, :
-            ]
+        # prepare dict to save removed threads to
+        self.removed_threads[calval] = {}
 
-        # drop cols unnecessary for modelling, kept only for thresholding
-        if "author_all_activity_count" not in self.regression_params["x_cols"]:
-            model_data.drop(labels=["author_all_activity_count"], axis=1, inplace=True)
+        # iterate through all thresholds given in thresholds dict
+        for colname in self.regression_params["thresholds"]:
+            threshold = self.regression_params["thresholds"][colname]
+
+            # save threads that have this column value below threshold
+            self.removed_threads[calval][colname] = model_data.loc[
+                model_data[colname] < threshold, :
+            ]
+            # update model data to only include threads with column value above threshold
+            model_data = model_data.loc[model_data[colname] >= threshold, :]
+
+        # drop the columns not required for modelling that were kept only for thresholding
+        to_drop = [
+            col
+            for col in self.regression_params["thresholds"]
+            if (
+                (col not in self.regression_params["x_cols"])
+                & (col not in self.regression_params["y_col"])
+            )
+        ]
+        if len(to_drop) > 0:
+            model_data.drop(labels=to_drop, axis=1, inplace=True)
+
         return model_data
 
     def merge_author_and_model_data(
-        self, model_data: pd.DataFrame, thread_data_cols: list):
+        self, model_data: pd.DataFrame, thread_data_cols: list
+    ):
         """Merges author data calculated with thread_data, with the given model_data.
         Performs a left hand merge with model data, such that only threads are left.
         Only merges columns that are specified in the regression params.
@@ -909,7 +918,7 @@ class RedditRegression(TimestampClass, QuantileClass):
             how="left",
         )
 
-        model_data.drop(labels=['id'], axis=1, inplace=True)
+        model_data.drop(labels=["id"], axis=1, inplace=True)
 
         return model_data
 
@@ -1037,10 +1046,12 @@ class RedditRegression(TimestampClass, QuantileClass):
             num_threads_modelled[calval] = {
                 "modelled_threads": len(self.__model_data__[calval])
             }
-            if "activity_threshold" in self.regression_params:
-                num_threads_modelled[calval]["removed_threads"] = len(
-                    self.removed_threads[calval]
-                )
+            if "thresholds" in self.regression_params:
+                for colname in self.removed_threads[calval]:
+                    num_threads_modelled[calval][f"{colname}_removed_threads"] = len(
+                        self.removed_threads[calval][colname]
+                    )
+
         df = pd.DataFrame.from_dict(num_threads_modelled)
         if not started:
             num_threads_modelled_df = df
@@ -1061,11 +1072,12 @@ class RedditRegression(TimestampClass, QuantileClass):
             Extra params to add to params df (e.g. filenames)
         """
         with pd.ExcelWriter(outpath, engine="xlsxwriter") as writer:
+            input_params = self.regression_params.copy()
             for key in params_to_add:
-                self.regression_params[key] = params_to_add[key]
-            self.params_dict_to_df(self.regression_params).to_excel(
-                writer, sheet_name="inputs"
-            )
+                input_params[key] = params_to_add[key]
+            if self.regression_params["regression_type"] == "mnlogit":
+                input_params.pop("performance_scoring_method")
+            self.params_dict_to_df(input_params).to_excel(writer, sheet_name="inputs")
             if self.regression_params["regression_type"] == "mnlogit":
                 # if mnlogit, output quantile metrics
                 self.quantile_metrics.to_excel(writer, sheet_name=f"quantile_metrics")
@@ -1204,18 +1216,20 @@ class RedditRegression(TimestampClass, QuantileClass):
         ax.plot(x, y)
         ax.set_title(f"{self.regression_params['name']} Sequential Forward Selection")
         ax.set_xlabel("Number of features")
-        ax.set_ylabel(self.regression_params["performance_scoring_method"])
+        ax.set_ylabel(self.regression_params["performance_scoring_method_str"])
         fig.tight_layout()
         plt.show()
 
     @staticmethod
-    def params_dict_to_df(params_dict):
+    def params_dict_to_df(params_dict, to_drop=[]):
         """Tranforms params dict to params df, ideal for excel output
 
         Parameters
         ----------
         params_dict : dict
             dictionary of input params
+        to_drop : list, optional
+            list of params to drop (for cleaner output)
 
         Returns
         -------
@@ -1227,6 +1241,8 @@ class RedditRegression(TimestampClass, QuantileClass):
             columns={0: "input"}
         )
         params_df.index.name = "param"
+        if len(to_drop) > 0:
+            params_df.drop(labels=to_drop, inplace=True)
         return params_df
 
     @staticmethod
