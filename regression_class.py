@@ -1042,7 +1042,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         """
         started = False
         num_threads_modelled = {}
-        for calval in self.model_data:
+        for calval in self.__model_data__:
             num_threads_modelled[calval] = {
                 "modelled_threads": len(self.__model_data__[calval])
             }
