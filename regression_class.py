@@ -3,6 +3,11 @@ import numpy as np
 import pandas as pd
 import datetime
 
+# for warnings, errors and exceptions management
+import warnings
+from numpy.linalg import LinAlgError
+import statsmodels.tools.sm_exceptions as sme
+
 # I/O
 import pickle
 
@@ -223,11 +228,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         "mnlogit": linear_model.LogisticRegression(multi_class="multinomial"),
     }
 
-    SMF_PARAMS_LOOKUP = {
-        "aic": "aic",
-        "bic": "bic",
-        "r2": "rsquared",
-    }
+    SMF_PARAMS_LOOKUP = {"aic": "aic", "bic": "bic", "r2": "rsquared"}
 
     DEFAULT_Y_COL = {
         "logistic": "success",
@@ -529,7 +530,7 @@ class RedditRegression(TimestampClass, QuantileClass):
             )
 
             # combine to form author info df
-            author_info = pd.concat((author_activity, author_mean_sentiment,), axis=1,)
+            author_info = pd.concat((author_activity, author_mean_sentiment), axis=1)
 
             # convert to dict of mapping dicts to add to thread data from day
             author_info_maps = author_info.to_dict()
@@ -562,15 +563,11 @@ class RedditRegression(TimestampClass, QuantileClass):
         # back to warning
         pd.options.mode.chained_assignment = "warn"
 
-    def main(self):
+    def get_cal_val_data(self):
+        """Performs all necessary operations to create the dfs for modelling and
+        validation.
         """
-        Calculates author count data from thread data with a rolling collection window.
-        - gets regression model data
-        - runs FSS if required and gets sm modstrings
-        - iterates through every proposed model:
-            - runs logistic regressions
-            - calculates metrics required (AIC, BIC, AUC)
-        """
+
         # get thread author data
         self.calc_author_thread_counts()
 
@@ -586,6 +583,18 @@ class RedditRegression(TimestampClass, QuantileClass):
             self.perform_scaling()
         else:
             self.__model_data__ = self.model_data
+
+    def main(self):
+        """
+        Calculates author count data from thread data with a rolling collection window.
+        - gets regression model data
+        - runs FSS if required and gets sm modstrings
+        - iterates through every proposed model:
+            - runs logistic regressions
+            - calculates metrics required (AIC, BIC, AUC)
+        """
+        # get calibration and validation dfs
+        self.get_cal_val_data()
 
         # if need FSS, run FSS
         if "FSS" in self.regression_params:
@@ -607,9 +616,11 @@ class RedditRegression(TimestampClass, QuantileClass):
         self.smf_models = {}
         for mod_key in self.sm_modstrings:
             print(f"Model {mod_key}")
-            self.smf_models[mod_key], model_results[mod_key] = self.run_regression(
-                mod_key
+            self.smf_models[mod_key] = self.run_regression(mod_key)
+            model_results[mod_key] = self.get_regression_metrics(
+                self.smf_models[mod_key], mod_key
             )
+
             param_dict[mod_key] = self.get_model_metrics_from_smf_mod(
                 self.smf_models[mod_key]
             )
@@ -647,10 +658,7 @@ class RedditRegression(TimestampClass, QuantileClass):
             ).T.rename(columns={0: "param", 1: "stderr", 2: "pvalue"})
 
         else:
-            lookup = {
-                "p_value": smf_mod.pvalues.T,
-                "param": smf_mod.params.T,
-            }
+            lookup = {"p_value": smf_mod.pvalues.T, "param": smf_mod.params.T}
 
             params_df = smf_mod.conf_int(alpha=conf_int).copy()
             params_df.rename(
@@ -922,28 +930,107 @@ class RedditRegression(TimestampClass, QuantileClass):
 
         return model_data
 
-    def run_regression(self, mod_key):
-        """Runs logistic regression for given model and updates model result and
-        parameters dicts with metrics and regression parameters for given model.
+    @staticmethod
+    def manage_convergence_warnings(fit_function, **kwargs):
+        """Checks whether the fit function runs and converges, if it doesn't suggests
+        new parameters for next iteration by modifying the solver and max iterations.
 
         Parameters
         ----------
-        mod_key : int
-            Key of given model (also corresponds to number of features in FSS case) to
-            run (modstrings are in self.sm_modstrings)
-        
+        fit_function : smf_model.fit
+            Statsmodels.formula.api model.fit function.
+
         Returns
         -------
-        smf.ModelResults
-            The ModelResults instance of the model run.
-            
+        bool, dict
+            Bool indicating whether to run the function again or not, and dictionary of
+            kwargs for fit function.
         """
-        smf_model = (
-            getattr(smf, self.SMF_FUNCTIONS[self.regression_params["regression_type"]])(
-                self.sm_modstrings[mod_key], data=self.__model_data__["cal"]
-            )
-        ).fit()
+        lookup_dict = {"method": "bfgs", "maxiter": 100}
+        maxiter_limit = 1000
+        run_again = False
+        with warnings.catch_warnings(record=True) as w:
+            try:
+                fit_function(**kwargs)
+            except LinAlgError:
+                kwargs["method"] = lookup_dict["method"]
+                run_again = True
+                return run_again, kwargs
+        if len(w) > 0:
+            for w_i in w:
+                if (w_i.category == RuntimeWarning) or (
+                    w_i.category == sme.ConvergenceWarning
+                ):
+                    for key in lookup_dict:
+                        if key not in kwargs:
+                            kwargs[key] = lookup_dict[key]
+                            run_again = True
+                            return run_again, kwargs
 
+                    key = "maxiter"
+                    if kwargs[key] < maxiter_limit:
+                        run_again = True
+                        kwargs[key] += 50
+
+                elif w_i.category == sme.HessianInversionWarning:
+                    if "method" in kwargs and kwargs["method"] == "cg":
+                        if "maxiter" in kwargs and kwargs["maxiter"] < maxiter_limit:
+                            kwargs["maxiter"] += 50
+                            run_again = True
+                        elif "maxiter" not in kwargs:
+                            kwargs["maxiter"] = lookup_dict["maxiter"]
+                            run_again = True
+                    else:
+                        kwargs["method"] = "cg"
+                        run_again = True
+
+                    return run_again, kwargs
+
+                return run_again, kwargs
+        else:
+            return run_again, kwargs
+
+    @classmethod
+    def fit_smf_model(cls, smf_model):
+        """Runs .fit on smf_model, but checks for linear algebra errors and convergence
+        warnings. If there are issues, it changes to a new solver (bfgs instead of
+        Newton) and increases the number of iterations.
+
+        Parameters
+        ----------
+        smf.model : Statsmodels.formula.api model
+            Statsmodels model instance (unfitted).
+
+        Returns
+        -------
+        smf.model.ResultsWrapper
+            Fitted model
+        """
+        run_again = True
+        run_counter = 0
+        max_runs = 10
+        kwargs_dict = {}
+        while run_again == True and run_counter < max_runs:
+            run_again, kwargs_dict = cls.manage_convergence_warnings(
+                smf_model.fit, **kwargs_dict
+            )
+            run_counter += 1
+
+        return smf_model.fit(**kwargs_dict)
+
+    def get_regression_metrics(self, smf_model, mod_key):
+        """Calculates regression metrics for given model
+
+        Parameters
+        ----------
+        smf_model : smf.ModelResults
+            smf fit object
+
+        Returns
+        -------
+        dict
+            dictionary of all model results
+        """
         model_results = {}
         if "FSS" in self.regression_params:
             if self.regression_params["FSS"] == True:
@@ -980,7 +1067,7 @@ class RedditRegression(TimestampClass, QuantileClass):
                         self.regression_params["y_col"]
                     ].reset_index(drop=True)
                     model_results[f"{calval}_{metric}"] = custom_params[metric](
-                        y_true, y_pred[calval],
+                        y_true, y_pred[calval]
                     )
             elif metric in self.SMF_PARAMS_LOOKUP:
                 model_results[metric] = getattr(
@@ -988,8 +1075,30 @@ class RedditRegression(TimestampClass, QuantileClass):
                 )
             else:
                 print(f"{metric} unknown. Not calculated.")
+        return model_results
 
-        return smf_model, model_results
+    def run_regression(self, mod_key):
+        """Runs regression for given model.
+
+        Parameters
+        ----------
+        mod_key : int
+            Key of given model (also corresponds to number of features in FSS case) to
+            run (modstrings are in self.sm_modstrings)
+        
+        Returns
+        -------
+        smf.ModelResults
+            The ModelResults instance of the model run.
+            
+        """
+        smf_model = getattr(
+            smf, self.SMF_FUNCTIONS[self.regression_params["regression_type"]]
+        )(self.sm_modstrings[mod_key], data=self.__model_data__["cal"])
+
+        smf_model = self.fit_smf_model(smf_model)
+
+        return smf_model
 
     def run_FSS(self):
         """Run Forward Sequential Selection, adding metrics to self.FSS_metrics dict,
@@ -1197,9 +1306,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         )
         self.FSS_metrics_df = df
 
-    def plot_FSS(
-        self, figsize=(7, 7),
-    ):
+    def plot_FSS(self, figsize=(7, 7)):
         """Plots the forward sequential selection AUC (or other performance measurement)
         vs number of features
 
@@ -1344,7 +1451,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         k = (1, max_k)
 
         sfs = SequentialFeatureSelector(
-            model, k_features=k, forward=True, scoring=scoring_method, cv=cv,
+            model, k_features=k, forward=True, scoring=scoring_method, cv=cv
         )
 
         selected_features = sfs.fit(X, y)
