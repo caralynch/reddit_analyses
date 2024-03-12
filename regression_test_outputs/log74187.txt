@@ -1,0 +1,49 @@
+2024-03-12 21:04:18,991 - __main__ - ERROR - Exception occurred
+Traceback (most recent call last):
+  File "/home/cara/Documents/reddit_analyses/reddit_analyses/35_2_run_regressions.py", line 57, in run_regression
+    regression.main()
+  File "/home/cara/Documents/reddit_analyses/reddit_analyses/regression_class.py", line 615, in main
+    self.run_models()
+  File "/home/cara/Documents/reddit_analyses/reddit_analyses/regression_class.py", line 632, in run_models
+    param_dict[mod_key] = self.get_model_metrics_from_smf_mod(
+  File "/home/cara/Documents/reddit_analyses/reddit_analyses/regression_class.py", line 662, in get_model_metrics_from_smf_mod
+    np.sqrt(np.diag(smf_mod.cov_params())), index=smf_mod.params.index
+  File "/home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/statsmodels/base/wrapper.py", line 113, in wrapper
+    obj = data.wrap_output(func(results, *args, **kwargs), how)
+  File "/home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/statsmodels/base/model.py", line 1498, in cov_params
+    raise ValueError('need covariance of parameters for computing '
+ValueError: need covariance of parameters for computing (unnormalized) covariances
+2024-03-12 21:04:19,131 - __main__ - ERROR - Exception occurred
+Traceback (most recent call last):
+  File "/home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/pandas/core/indexes/base.py", line 3802, in get_loc
+    return self._engine.get_loc(casted_key)
+  File "pandas/_libs/index.pyx", line 138, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/index.pyx", line 165, in pandas._libs.index.IndexEngine.get_loc
+  File "pandas/_libs/hashtable_class_helper.pxi", line 4726, in pandas._libs.hashtable.UInt8HashTable.get_item
+  File "pandas/_libs/hashtable_class_helper.pxi", line 4736, in pandas._libs.hashtable.UInt8HashTable.get_item
+KeyError: 1
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/cara/Documents/reddit_analyses/reddit_analyses/35_2_run_regressions.py", line 57, in run_regression
+    regression.main()
+  File "/home/cara/Documents/reddit_analyses/reddit_analyses/regression_class.py", line 615, in main
+    self.run_models()
+  File "/home/cara/Documents/reddit_analyses/reddit_analyses/regression_class.py", line 628, in run_models
+    model_results[mod_key] = self.get_regression_metrics(
+  File "/home/cara/Documents/reddit_analyses/reddit_analyses/regression_class.py", line 1077, in get_regression_metrics
+    model_results[f"{calval}_{metric}"] = custom_params[metric](
+  File "/home/cara/Documents/reddit_analyses/reddit_analyses/regression_class.py", line 1496, in mnlogit_accuracy_score_from_y_pred
+    return value_counts.loc[True] / value_counts.sum()
+  File "/home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/pandas/core/indexing.py", line 1073, in __getitem__
+    return self._getitem_axis(maybe_callable, axis=axis)
+  File "/home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/pandas/core/indexing.py", line 1312, in _getitem_axis
+    return self._get_label(key, axis=axis)
+  File "/home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/pandas/core/indexing.py", line 1260, in _get_label
+    return self.obj.xs(label, axis=axis)
+  File "/home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/pandas/core/generic.py", line 4056, in xs
+    loc = index.get_loc(key)
+  File "/home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/pandas/core/indexes/base.py", line 3804, in get_loc
+    raise KeyError(key) from err
+KeyError: True

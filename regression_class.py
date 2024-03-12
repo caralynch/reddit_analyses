@@ -10,6 +10,7 @@ import statsmodels.tools.sm_exceptions as sme
 
 # I/O
 import pickle
+import logging
 
 # plots
 import matplotlib.pyplot as plt
@@ -251,7 +252,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         "mnlogit": mnlogit_accuracy_score,
     }
 
-    def __init__(self, regression_params: dict):
+    def __init__(self, regression_params: dict, logger=None):
         """Initialise regression data class
 
         Parameters
@@ -275,7 +276,14 @@ class RedditRegression(TimestampClass, QuantileClass):
             'metrics': list of metrics to output (AUC, AIC,...)
             'thresholds': dict of thresholds to include on model data, in the format key = column name to be thresholded and value = threshold value, with model data filtered such that only rows above or including that value are included.
             'scale': True if wish to use sklearn's scaler in preprocessing.
+        logger : logging.Logger, optional
+            an optional logger
         """
+        if logger == None:
+            self.logger = logging.getLogger(__name__, level=logging.INFO)
+        else:
+            self.logger = logger
+        print = self.logger.info
 
         self.regression_data = regression_params["regression_data"]
         del regression_params["regression_data"]
@@ -598,7 +606,7 @@ class RedditRegression(TimestampClass, QuantileClass):
 
         # if need FSS, run FSS
         if "FSS" in self.regression_params:
-            print(f"Running FSS")
+            self.logger.info(f"Running FSS")
             self.sm_modstrings = self.run_FSS()
         else:
             self.sm_modstrings = self.regression_params["models"]
@@ -615,7 +623,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         param_dict = {}
         self.smf_models = {}
         for mod_key in self.sm_modstrings:
-            print(f"Model {mod_key}")
+            self.logger.info(f"Model {mod_key}")
             self.smf_models[mod_key] = self.run_regression(mod_key)
             model_results[mod_key] = self.get_regression_metrics(
                 self.smf_models[mod_key], mod_key
@@ -1074,7 +1082,7 @@ class RedditRegression(TimestampClass, QuantileClass):
                     smf_model, self.SMF_PARAMS_LOOKUP[metric]
                 )
             else:
-                print(f"{metric} unknown. Not calculated.")
+                self.logger.info(f"{metric} unknown. Not calculated.")
         return model_results
 
     def run_regression(self, mod_key):

@@ -5,34 +5,37 @@ import os
 # time tracking
 from datetime import datetime as dt
 
+# warnings
+import warnings
+
 # multiprocessing
 from multiprocessing import Pool
 
 # custom imports
 from regression_class import RedditRegression as RR
 
-
+warnings.simplefilter("ignore")
 start = dt.now()
 print(f"Start time {start}")
 
 # infiles
 # TESTING
-TEST_INFILE = "test_data_5_days.p"
-test_data = pickle.load(open(TEST_INFILE, 'rb'))
-regression_df = test_data["regression_data"]
-thread_df = test_data["all_data"]
+#TEST_INFILE = "test_data_4_days.p"
+#test_data = pickle.load(open(TEST_INFILE, 'rb'))
+#regression_df = test_data["regression_data"]
+#thread_df = test_data["all_data"]
 #REGRESSION_INFILE = "regression_thread_data.p"
 #THREAD_INFILE = "clean_5_thread_data.p"
 
 # outfiles
-OUTDIR = "regression_outputs"
+OUTDIR = "regression_test_outputs"
 METRICS_OUTFILE = "regression_metrics"
 
 # subreddits to look at
-subreddits = ["books", "crypto", "conspiracy", "politics"]
+#subreddits = ["books", "crypto", "conspiracy", "politics"]
 
 # regression types to run
-regression_types = ["logistic", "linear", "mnlogit"]
+r#egression_types = ["logistic", "linear", "mnlogit"]
 
 # get outdir names for all regression types
 out_subdirs = {}
@@ -45,13 +48,13 @@ out_params_dict = {}
 
 def run_regression_type(regression_type):
     print(dt.now())
-    print(f"\n    ## Regression type: {regression_type}##")
+    print(f"\n########## Regression type: {regression_type} ##########")
     input_params = regression_params[regression_type].copy()
 
     # place to store logregs
     subreddit_logregs = {}
     for subreddit in subreddits:
-        print(f"#{subreddit}#")
+        print(f"####### {subreddit} #######")
         input_params["name"] = subreddit
         input_params["regression_data"] = regression_df[subreddit]
         input_params["thread_data"] = thread_df[subreddit]
@@ -63,7 +66,7 @@ def run_regression_type(regression_type):
     # dump pickle results
     outstring = f"{out_subdirs[regression_type]}/{METRICS_OUTFILE}.p"
     print(dt.now())
-    print(f"\n\n\n   DUMPING RESULTS TO \n{outstring}\n\n\n")
+    print(f"\n\n\nDUMPING RESULTS TO \n{outstring}\n\n\n")
     pickle.dump(
         subreddit_logregs, open(outstring, "wb",),
     )
@@ -74,7 +77,7 @@ print(dt.now())
 
 
 # make out directories
-for outdirname in out_subdirs:
+for outdirname in ([OUTDIR] + list(out_subdirs.values())):
     if not os.path.isdir(outdirname):
         os.mkdir(outdirname)
 
@@ -101,9 +104,9 @@ X_COLS = [
 ]
 
 fixed_regression_params = {
-    "collection_window": 7,
-    "model_window": 14,
-    "validation_window": 7,
+    "collection_window": 1,
+    "model_window": 2,
+    "validation_window": 1,
     "FSS": True,
     "x_cols": X_COLS,
     "scale": True,
