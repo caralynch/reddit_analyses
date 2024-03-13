@@ -266,13 +266,13 @@ class RedditRegression(TimestampClass, QuantileClass):
         """
         # set up logging
         logging.captureWarnings(True)
-        
+
         self.loggers = {
-            'warnings': logging.getLogger("py.warnings"),
-            'info': logging.getLogger(f"{__name__}_{name}")
+            "warnings": logging.getLogger("py.warnings"),
+            "info": logging.getLogger(f"{__name__}_{name}"),
         }
-        self.loggers['info'].setLevel(logging.INFO)
-        print = self.loggers['info'].info
+        self.loggers["info"].setLevel(logging.INFO)
+        print = self.loggers["info"].info
 
         if log_handlers is not None:
             if isinstance(log_handlers, list):
@@ -294,9 +294,9 @@ class RedditRegression(TimestampClass, QuantileClass):
             # stream handler for logging
             handler = logging.StreamHandler()
             handler.setLevel(logging.INFO)
-            format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+            format = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
             handler.setFormatter(format)
-            self.loggers['info'].addHandler(handler)
+            self.loggers["info"].addHandler(handler)
 
     def __init__(self, regression_params: dict, log_handlers=None):
         """Initialise regression data class
@@ -328,9 +328,12 @@ class RedditRegression(TimestampClass, QuantileClass):
         """
         # to avoid warning dating when creating new cols
         pd.options.mode.chained_assignment = None
-        
+
         # set up logging
-        self.set_up_loggers(log_handlers, name=f"{regression_params['name']}_{regression_params['regression_type']}")
+        self.set_up_loggers(
+            log_handlers,
+            name=f"{regression_params['name']}_{regression_params['regression_type']}",
+        )
 
         regression_params = regression_params.copy()
 
@@ -654,7 +657,7 @@ class RedditRegression(TimestampClass, QuantileClass):
 
         # if need FSS, run FSS
         if "FSS" in self.regression_params:
-            self.loggers['info'].info(f"Running FSS")
+            self.loggers["info"].info(f"Running FSS")
             self.sm_modstrings = self.run_FSS()
         else:
             self.sm_modstrings = self.regression_params["models"]
@@ -674,7 +677,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         param_dict = {}
         self.smf_models = {}
         for mod_key in self.sm_modstrings:
-            self.loggers['info'].info(f"Model {mod_key}")
+            self.loggers["info"].info(f"Model {mod_key}")
             self.smf_models[mod_key] = self.run_regression(mod_key)
             model_results[mod_key] = self.get_regression_metrics(
                 self.smf_models[mod_key], mod_key
@@ -709,11 +712,13 @@ class RedditRegression(TimestampClass, QuantileClass):
         """
 
         if self.regression_params["regression_type"] != "mnlogit":
-            params_df = pd.DataFrame(
-                [smf_mod.params, smf_mod.pvalues]
-            ).T.rename(columns={0: "param", 1: "pvalue"})
+            params_df = pd.DataFrame([smf_mod.params, smf_mod.pvalues]).T.rename(
+                columns={0: "param", 1: "pvalue"}
+            )
 
-            conf_df = smf_mod.conf_int(alpha=conf_int).rename(columns={0: 'conf_low', 1: 'conf_high'})
+            conf_df = smf_mod.conf_int(alpha=conf_int).rename(
+                columns={0: "conf_low", 1: "conf_high"}
+            )
 
             params_df = pd.concat((params_df, conf_df), axis=1)
 
@@ -1018,8 +1023,8 @@ class RedditRegression(TimestampClass, QuantileClass):
                 elif kwargs["method"] == "bfgs":
                     kwargs["method"] = "cg"
                 else:
-                    self.loggers['info'].exception()
-                    #raise e
+                    self.loggers["info"].exception()
+                    # raise e
                 run_again = True
                 return run_again, kwargs
 
@@ -1121,10 +1126,10 @@ class RedditRegression(TimestampClass, QuantileClass):
 
         # for info about the model convergence
         mle_settings = {
-            'optimizer': 'mle_settings',
-            'iterations': 'mle_retvals',
-            'converged': 'mle_retvals',
-            'fcalls': 'mle_retvals',
+            "optimizer": "mle_settings",
+            "iterations": "mle_retvals",
+            "converged": "mle_retvals",
+            "fcalls": "mle_retvals",
         }
 
         y_pred = {"cal": pd.DataFrame(smf_model.predict())}
@@ -1150,14 +1155,14 @@ class RedditRegression(TimestampClass, QuantileClass):
                     smf_model, self.SMF_PARAMS_LOOKUP[metric]
                 )
             else:
-                self.loggers['info'].info(f"{metric} unknown. Not calculated.")
-        
+                self.loggers["info"].info(f"{metric} unknown. Not calculated.")
+
         for metric in mle_settings:
             try:
                 model_results[metric] = getattr(smf_model, mle_settings[metric])[metric]
             except (KeyError, AttributeError):
                 pass
-        
+
         return model_results
 
     def run_regression(self, mod_key):

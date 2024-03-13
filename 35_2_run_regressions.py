@@ -20,7 +20,7 @@ from regression_class import RedditRegression as RR
 
 OUTDIR = "regression_test_outputs"
 PARAMS_DICT_INFILE = f"{OUTDIR}/input_params.p"
-start_time = dt.now().strftime('%d_%m_%Y__%H_%M_%S')
+start_time = dt.now().strftime("%d_%m_%Y__%H_%M_%S")
 LOGFILE = f"{OUTDIR}/{start_time}"
 OUTFILE = f"{OUTDIR}/regressions.p"
 
@@ -32,14 +32,14 @@ logger.setLevel(logging.INFO)
 # stream handler for logging
 c_handler = logging.StreamHandler()
 c_handler.setLevel(logging.INFO)
-c_format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+c_format = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
 c_handler.setFormatter(c_format)
 
 
 # logfile handler
 f_handler = logging.FileHandler(f"{LOGFILE}.log")
 f_handler.setLevel(logging.INFO)
-f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+f_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 f_handler.setFormatter(f_format)
 
 # add handlers to the logger
@@ -58,10 +58,7 @@ def run_regression(params_dict):
         sub_f_handler.setLevel(logging.INFO)
         sub_f_handler.setFormatter(f_format)
         # add handlers to the logger
-        handlers = {
-            'info': sub_f_handler,
-            'warnings': sub_f_handler
-        }
+        handlers = {"info": sub_f_handler, "warnings": sub_f_handler}
         regression = RR(params_dict, log_handlers=handlers)
         regression.main()
     except Exception as e:
@@ -72,7 +69,7 @@ def run_regression(params_dict):
 
 
 if __name__ == "__main__":
-    #warnings.simplefilter("ignore")
+    # warnings.simplefilter("ignore")
     start = dt.now()
     logger.info(f"Start time {start}, PID {os.getpid()}")
     try:
@@ -105,9 +102,9 @@ if __name__ == "__main__":
     try:
         logger.info("Writing to pickle file")
         pickle.dump(out_dict, open(OUTFILE, "wb"))
-        
+
     except Exception as e:
         logger.exception("Exception occurred with output")
         raise e
-    
+
     logger.info(f"FINISHED at {dt.now()}, time taken {dt.now()-start}")
