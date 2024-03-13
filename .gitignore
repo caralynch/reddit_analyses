@@ -10,3 +10,4 @@
 *.pyc
 !plotting_metrics.p
 !test*.p
+*.log
