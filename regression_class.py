@@ -254,19 +254,22 @@ class RedditRegression(TimestampClass, QuantileClass):
         "mnlogit": mnlogit_accuracy_score,
     }
 
-    def set_up_loggers(self, log_handlers):
+    def set_up_loggers(self, log_handlers, name):
         """_Sets up the loggers for the class.
 
         Parameters
         ----------
         log_handlers : list, dict or logging.handler
             A list, dict or logging.handler to pass to the class loggers.
+        name : str
+            Name of info logger
         """
         # set up logging
         logging.captureWarnings(True)
+        
         self.loggers = {
             'warnings': logging.getLogger("py.warnings"),
-            'info': logging.getLogger(__name__)
+            'info': logging.getLogger(f"{__name__}_{name}")
         }
         self.loggers['info'].setLevel(logging.INFO)
         print = self.loggers['info'].info
@@ -327,7 +330,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         pd.options.mode.chained_assignment = None
         
         # set up logging
-        self.set_up_loggers(log_handlers)
+        self.set_up_loggers(log_handlers, name=f"{regression_params['name']}_{regression_params['regression_type']}")
 
         regression_params = regression_params.copy()
 
@@ -1015,7 +1018,8 @@ class RedditRegression(TimestampClass, QuantileClass):
                 elif kwargs["method"] == "bfgs":
                     kwargs["method"] = "cg"
                 else:
-                    raise e
+                    self.loggers['info'].exception()
+                    #raise e
                 run_again = True
                 return run_again, kwargs
 
@@ -1151,7 +1155,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         for metric in mle_settings:
             try:
                 model_results[metric] = getattr(smf_model, mle_settings[metric])[metric]
-            except KeyError:
+            except (KeyError, AttributeError):
                 pass
         
         return model_results

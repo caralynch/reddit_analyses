@@ -20,11 +20,13 @@ from regression_class import RedditRegression as RR
 
 OUTDIR = "regression_test_outputs"
 PARAMS_DICT_INFILE = f"{OUTDIR}/input_params.p"
-LOGFILE = f"{OUTDIR}/log{os.getpid()}.txt"
+start_time = dt.now().strftime('%d_%m_%Y__%H_%M_%S')
+LOGFILE = f"{OUTDIR}/{start_time}"
 OUTFILE = f"{OUTDIR}/regressions.p"
 
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 # stream handler for logging
@@ -35,7 +37,7 @@ c_handler.setFormatter(c_format)
 
 
 # logfile handler
-f_handler = logging.FileHandler(LOGFILE)
+f_handler = logging.FileHandler(f"{LOGFILE}.log")
 f_handler.setLevel(logging.INFO)
 f_format = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 f_handler.setFormatter(f_format)
@@ -50,16 +52,27 @@ out_dict = {}
 def run_regression(params_dict):
     try:
         name = f"{params_dict['name']}_{params_dict['regression_type']}"
-        regression = RR(params_dict, logger=logger)
+        logger.info(f"#### {name} ####")
+        # logfile handler
+        sub_f_handler = logging.FileHandler(f"{LOGFILE}_{name}.log")
+        sub_f_handler.setLevel(logging.INFO)
+        sub_f_handler.setFormatter(f_format)
+        # add handlers to the logger
+        handlers = {
+            'info': sub_f_handler,
+            'warnings': sub_f_handler
+        }
+        regression = RR(params_dict, log_handlers=handlers)
         regression.main()
-        out_dict[name] = regression
     except Exception as e:
+        logger.exception(f"Exception occurred in {name} process")
+    finally:
         out_dict[name] = regression
-        logger.exception("Exception occurred")
+        logger.info(f"#### {name} FINISHED ####")
 
 
 if __name__ == "__main__":
-    warnings.simplefilter("ignore")
+    #warnings.simplefilter("ignore")
     start = dt.now()
     logger.info(f"Start time {start}, PID {os.getpid()}")
     try:
@@ -92,6 +105,9 @@ if __name__ == "__main__":
     try:
         logger.info("Writing to pickle file")
         pickle.dump(out_dict, open(OUTFILE, "wb"))
+        
     except Exception as e:
         logger.exception("Exception occurred with output")
         raise e
+    
+    logger.info(f"FINISHED at {dt.now()}, time taken {dt.now()-start}")
