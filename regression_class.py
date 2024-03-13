@@ -2,6 +2,7 @@
 import numpy as np
 import pandas as pd
 import datetime
+import sys
 
 # for warnings, errors and exceptions management
 import warnings
@@ -11,6 +12,7 @@ import statsmodels.tools.sm_exceptions as sme
 # I/O
 import pickle
 import logging
+
 
 # plots
 import matplotlib.pyplot as plt
@@ -252,7 +254,48 @@ class RedditRegression(TimestampClass, QuantileClass):
         "mnlogit": mnlogit_accuracy_score,
     }
 
-    def __init__(self, regression_params: dict, logger=None):
+    def set_up_loggers(self, log_handlers):
+        """_Sets up the loggers for the class.
+
+        Parameters
+        ----------
+        log_handlers : list, dict or logging.handler
+            A list, dict or logging.handler to pass to the class loggers.
+        """
+        # set up logging
+        logging.captureWarnings(True)
+        self.loggers = {
+            'warnings': logging.getLogger("py.warnings"),
+            'info': logging.getLogger(__name__)
+        }
+        self.loggers['info'].setLevel(logging.INFO)
+        print = self.loggers['info'].info
+
+        if log_handlers is not None:
+            if isinstance(log_handlers, list):
+                for handler in log_handlers:
+                    for key in self.loggers:
+                        self.loggers[key].addHandler(handler)
+
+            elif isinstance(log_handlers, dict):
+                for key in log_handlers:
+                    if isinstance(log_handlers[key], list):
+                        for handler in log_handlers[key]:
+                            self.loggers[key].addHandler(handler)
+                    else:
+                        self.loggers[key].addHandler(log_handlers[key])
+            else:
+                for key in self.loggers:
+                    self.loggers[key].addHandler(log_handlers)
+        else:
+            # stream handler for logging
+            handler = logging.StreamHandler()
+            handler.setLevel(logging.INFO)
+            format = logging.Formatter('%(name)s - %(levelname)s - %(message)s')
+            handler.setFormatter(format)
+            self.loggers['info'].addHandler(handler)
+
+    def __init__(self, regression_params: dict, log_handlers=None):
         """Initialise regression data class
 
         Parameters
@@ -276,20 +319,20 @@ class RedditRegression(TimestampClass, QuantileClass):
             'metrics': list of metrics to output (AUC, AIC,...)
             'thresholds': dict of thresholds to include on model data, in the format key = column name to be thresholded and value = threshold value, with model data filtered such that only rows above or including that value are included.
             'scale': True if wish to use sklearn's scaler in preprocessing.
-        logger : logging.Logger, optional
-            an optional logger
+        log_handlers : list, optional
+            list of log handlers to pass to class. Defaults to empty list and standard
+            streamhandler is set up.
         """
-        if logger == None:
-            self.logger = logging.getLogger(__name__, level=logging.INFO)
-        else:
-            self.logger = logger
-        print = self.logger.info
+        # to avoid warning dating when creating new cols
+        pd.options.mode.chained_assignment = None
+        
+        # set up logging
+        self.set_up_loggers(log_handlers)
+
+        regression_params = regression_params.copy()
 
         self.regression_data = regression_params["regression_data"]
         del regression_params["regression_data"]
-
-        # to avoid warning dating when creating new cols
-        pd.options.mode.chained_assignment = None
 
         # want sentiment in thread data to be one col
         regression_params["thread_data"].loc[:, "sentiment_score"] = regression_params[
@@ -601,18 +644,23 @@ class RedditRegression(TimestampClass, QuantileClass):
             - runs logistic regressions
             - calculates metrics required (AIC, BIC, AUC)
         """
+        # to avoid warning dating when creating new cols
+        pd.options.mode.chained_assignment = None
         # get calibration and validation dfs
         self.get_cal_val_data()
 
         # if need FSS, run FSS
         if "FSS" in self.regression_params:
-            self.logger.info(f"Running FSS")
+            self.loggers['info'].info(f"Running FSS")
             self.sm_modstrings = self.run_FSS()
         else:
             self.sm_modstrings = self.regression_params["models"]
 
         # run models
         self.run_models()
+
+        # back to warning
+        pd.options.mode.chained_assignment = "warn"
 
     def run_models(self):
         """Run models from obtained modstrings. Save metrics to regression_metrics dict.
@@ -623,7 +671,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         param_dict = {}
         self.smf_models = {}
         for mod_key in self.sm_modstrings:
-            self.logger.info(f"Model {mod_key}")
+            self.loggers['info'].info(f"Model {mod_key}")
             self.smf_models[mod_key] = self.run_regression(mod_key)
             model_results[mod_key] = self.get_regression_metrics(
                 self.smf_models[mod_key], mod_key
@@ -658,12 +706,13 @@ class RedditRegression(TimestampClass, QuantileClass):
         """
 
         if self.regression_params["regression_type"] != "mnlogit":
-            stderr = pd.Series(
-                np.sqrt(np.diag(smf_mod.cov_params())), index=smf_mod.params.index
-            )
             params_df = pd.DataFrame(
-                [smf_mod.params, stderr, smf_mod.pvalues]
-            ).T.rename(columns={0: "param", 1: "stderr", 2: "pvalue"})
+                [smf_mod.params, smf_mod.pvalues]
+            ).T.rename(columns={0: "param", 1: "pvalue"})
+
+            conf_df = smf_mod.conf_int(alpha=conf_int).rename(columns={0: 'conf_low', 1: 'conf_high'})
+
+            params_df = pd.concat((params_df, conf_df), axis=1)
 
         else:
             lookup = {"p_value": smf_mod.pvalues.T, "param": smf_mod.params.T}
@@ -959,11 +1008,17 @@ class RedditRegression(TimestampClass, QuantileClass):
         run_again = False
         with warnings.catch_warnings(record=True) as w:
             try:
-                fit_function(**kwargs)
-            except LinAlgError:
-                kwargs["method"] = lookup_dict["method"]
+                fit_function(disp=0, **kwargs)
+            except (LinAlgError, sme.PerfectSeparationError) as e:
+                if "method" not in kwargs or kwargs["method"] != "bfgs":
+                    kwargs["method"] = "bfgs"
+                elif kwargs["method"] == "bfgs":
+                    kwargs["method"] = "cg"
+                else:
+                    raise e
                 run_again = True
                 return run_again, kwargs
+
         if len(w) > 0:
             for w_i in w:
                 if (w_i.category == RuntimeWarning) or (
@@ -981,16 +1036,17 @@ class RedditRegression(TimestampClass, QuantileClass):
                         kwargs[key] += 50
 
                 elif w_i.category == sme.HessianInversionWarning:
-                    if "method" in kwargs and kwargs["method"] == "cg":
+                    if "method" not in kwargs or kwargs["method"] != "bfgs":
+                        kwargs["method"] = "bfgs"
+                    elif kwargs["method"] == "bfgs":
+                        kwargs["method"] = "cg"
+                    else:
                         if "maxiter" in kwargs and kwargs["maxiter"] < maxiter_limit:
                             kwargs["maxiter"] += 50
                             run_again = True
                         elif "maxiter" not in kwargs:
                             kwargs["maxiter"] = lookup_dict["maxiter"]
                             run_again = True
-                    else:
-                        kwargs["method"] = "cg"
-                        run_again = True
 
                     return run_again, kwargs
 
@@ -1024,7 +1080,7 @@ class RedditRegression(TimestampClass, QuantileClass):
             )
             run_counter += 1
 
-        return smf_model.fit(**kwargs_dict)
+        return smf_model.fit(disp=0, **kwargs_dict)
 
     def get_regression_metrics(self, smf_model, mod_key):
         """Calculates regression metrics for given model
@@ -1059,6 +1115,14 @@ class RedditRegression(TimestampClass, QuantileClass):
             "r2": metrics.r2_score,
         }
 
+        # for info about the model convergence
+        mle_settings = {
+            'optimizer': 'mle_settings',
+            'iterations': 'mle_retvals',
+            'converged': 'mle_retvals',
+            'fcalls': 'mle_retvals',
+        }
+
         y_pred = {"cal": pd.DataFrame(smf_model.predict())}
 
         if "validation_window" in self.regression_params:
@@ -1082,7 +1146,14 @@ class RedditRegression(TimestampClass, QuantileClass):
                     smf_model, self.SMF_PARAMS_LOOKUP[metric]
                 )
             else:
-                self.logger.info(f"{metric} unknown. Not calculated.")
+                self.loggers['info'].info(f"{metric} unknown. Not calculated.")
+        
+        for metric in mle_settings:
+            try:
+                model_results[metric] = getattr(smf_model, mle_settings[metric])[metric]
+            except KeyError:
+                pass
+        
         return model_results
 
     def run_regression(self, mod_key):
