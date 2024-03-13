@@ -1616,6 +1616,94 @@ class RedditRegression(TimestampClass, QuantileClass):
         else:
             return row.body_sentiment_score
 
+    @staticmethod
+    def create_param_dict(
+        subreddit: str,
+        regression_type: str,
+        regression_df: pd.DataFrame,
+        thread_df: pd.DataFrame,
+        **kwargs,
+    ):
+        """Creates a default params dict to initialise a RedditRegression instance.
+
+        Parameters
+        ----------
+        subreddit : str
+            subreddit name
+        regression_type : str
+            regression type (linear, logistic or mnlogit)
+        regression_df : pd.DataFrame
+            regression df for relevant subreddit
+        thread_df : pd.DataFrame
+            thread df for relevant subreddit
+
+        Returns
+        -------
+        dict
+            params dict
+        """
+        # fixed regression params
+        X_COLS = [
+            "sentiment_sign",
+            "sentiment_magnitude",
+            "time_in_secs",
+            "num_dayofweek",
+            "activity_ratio",
+            "mean_author_sentiment_sign",
+            "mean_author_sentiment_magnitude",
+            "author_all_activity_count",
+        ]
+
+        FIXED_PARAMS = {
+            "collection_window": 7,
+            "model_window": 14,
+            "validation_window": 7,
+            "FSS": True,
+            "x_cols": X_COLS,
+            "scale": True,
+        }
+
+        # Regression params which depend on type
+        QUANTILES = [0.25, 0.5, 0.75]
+
+        THRESHOLDS_SUCCESSFUL = {"author_all_activity_count": 2, "thread_size": 2}
+        THRESHOLDS_ALL = {"author_all_activity_count": 2}
+
+        PARAMS_BY_TYPE = {
+            "logistic": {
+                "regression_type": "logistic",
+                "y_col": "success",
+                "metrics": ["auc"],
+                "thresholds": THRESHOLDS_ALL,
+            },
+            "linear": {
+                "regression_type": "linear",
+                "y_col": "thread_size",
+                "metrics": ["r2"],
+                "thresholds": THRESHOLDS_SUCCESSFUL,
+            },
+            "mnlogit": {
+                "regression_type": "mnlogit",
+                "y_col": "thread_size",
+                "metrics": ["mnlogit_accuracy", "mnlogit_aucs", "mnlogit_mean_auc"],
+                "thresholds": THRESHOLDS_SUCCESSFUL,
+                "quantiles": QUANTILES,
+            },
+        }
+
+        FIXED_PARAMS.update(PARAMS_BY_TYPE[regression_type])
+        regression_params = {
+            "name": subreddit,
+            "regression_data": regression_df,
+            "thread_data": thread_df,
+        }
+        regression_params.update(kwargs)
+        params_to_add = [x for x in FIXED_PARAMS if x not in kwargs]
+        for key in params_to_add:
+            regression_params[key] = FIXED_PARAMS[key]
+
+        return regression_params
+
     def get_author_collection_data(self, date_index):
         """DEPRECATED
         Get thread data from collection period only, calculating author activity
