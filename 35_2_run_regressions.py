@@ -18,7 +18,6 @@ from multiprocessing import Pool
 # custom imports
 from regression_class import RedditRegression as RR
 
-OUTDIR = "regression_outputs"
 # PARAMS_DICT_INFILE = f"{OUTDIR}/input_params.p"
 REGRESSION_INFILE = "regression_thread_data.p"
 THREAD_INFILE = "clean_5_thread_data.p"
@@ -26,7 +25,8 @@ SUBREDDITS = ["books", "crypto", "conspiracy", "politics"]
 REGRESSION_TYPES = ["logistic", "linear", "mnlogit"]
 
 start_time = dt.now().strftime("%d_%m_%Y__%H_%M_%S")
-LOGDIR = f"{OUTDIR}/logs_{start_time}"
+OUTDIR = f"regression_outputs/{start_time}"
+LOGDIR = f"{OUTDIR}/logs"
 OUTFILE = f"{OUTDIR}/regressions.p"
 
 
