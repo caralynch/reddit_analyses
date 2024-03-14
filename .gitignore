@@ -10,4 +10,4 @@
 *.pyc
 !plotting_metrics.p
 !test*.p
-*.log
+regression_test_outputs/*
