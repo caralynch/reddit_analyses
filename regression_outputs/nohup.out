@@ -1,0 +1,34 @@
+__main__ - INFO - ## Reading in files ##
+__main__ - INFO -    Regression infile
+__main__ - INFO -    Thread infile
+__main__ - INFO - ## Finished reading in files ##
+__main__ - INFO - ## Creating parameter dictionaries ##
+__main__ - INFO - ## Finished creating parameter dictionaries ##
+__main__ - INFO - ## Starting pool processes ##
+__main__ - INFO -   ### books_logistic ###
+__main__ - INFO -   ### books_linear ###
+__main__ - INFO -   ### books_mnlogit ###
+__main__ - INFO -   ### crypto_logistic ###
+__main__ - INFO -   ### crypto_linear ###
+__main__ - INFO -   ### crypto_mnlogit ###
+__main__ - INFO -   ### conspiracy_logistic ###
+__main__ - INFO -   ### conspiracy_linear ###
+__main__ - INFO -   ### books_linear FINISHED ###
+__main__ - INFO -   ### conspiracy_mnlogit ###
+__main__ - INFO -   ### books_logistic FINISHED ###
+__main__ - INFO -   ### books_mnlogit FINISHED ###
+__main__ - INFO -   ### politics_logistic ###
+__main__ - INFO -   ### politics_linear ###
+__main__ - INFO -   ### crypto_logistic FINISHED ###
+__main__ - INFO -   ### conspiracy_logistic FINISHED ###
+__main__ - INFO -   ### conspiracy_linear FINISHED ###
+__main__ - INFO -   ### crypto_linear FINISHED ###
+__main__ - INFO -   ### politics_mnlogit ###
+__main__ - INFO -   ### crypto_mnlogit FINISHED ###
+__main__ - INFO -   ### conspiracy_mnlogit FINISHED ###
+__main__ - INFO -   ### politics_logistic FINISHED ###
+__main__ - INFO -   ### politics_linear FINISHED ###
+__main__ - INFO -   ### politics_mnlogit FINISHED ###
+__main__ - INFO - ## Finished pool processes ##
+__main__ - INFO - ## Writing to pickle file ##
+__main__ - INFO - FINISHED at 2024-03-13 20:25:40.355257, time taken 0:10:19.399471
