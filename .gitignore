@@ -11,3 +11,4 @@
 !plotting_metrics.p
 !test*.p
 regression_test_outputs/*
+!regression_outputs/*regressions.p
