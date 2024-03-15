@@ -1,8 +1,6 @@
 # data types
 import numpy as np
 import pandas as pd
-import datetime
-import sys
 
 # for warnings, errors and exceptions management
 import warnings
@@ -17,13 +15,10 @@ import logging
 # plots
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-import matplotlib.dates as dates
 
 # stats
-import scipy.stats as scpstat
 from sklearn import metrics
 import statsmodels.formula.api as smf
-import statsmodels.api as sm
 from sklearn import preprocessing
 from sklearn import linear_model
 from itertools import groupby
@@ -37,7 +32,6 @@ from mlxtend.plotting import plot_sequential_feature_selection as plot_sfs
 Add thread size thresholding
 Add domain tracker - e.g. domain frequency or something?
 """
-
 
 class TimestampClass:
     """Class for various timestamp functions
@@ -82,7 +76,7 @@ class QuantileClass:
         self.quantiles = quantiles
         self.quantile_values = self.get_quantiles(data_series, quantiles)
 
-    def main(self, weight_lower=False):
+    def main(self):
         self.get_range_tuples_()
         self.classify_cols_by_quantile_()
         out_dict = {
@@ -131,14 +125,14 @@ class QuantileClass:
         return quantile_values
 
     @staticmethod
-    def get_number_in_range(data_series: pd.Series, range: tuple):
+    def get_number_in_range(data_series: pd.Series, range_tuple: tuple):
         """Get number of data points in series within given range, a closed interval.
 
         Parameters
         ----------
         data_series : pd.Series
             Data
-        range : tuple
+        range_tuple : tuple
             Range of values to consider - considered a closed interval.
 
         Returns
@@ -147,7 +141,7 @@ class QuantileClass:
             Number of entries in data_series within the given range
         """
         data_in_range = data_series[
-            (data_series >= range[0]) & (data_series <= range[1])
+            (data_series >= range_tuple[0]) & (data_series <= range_tuple[1])
         ]
         return len(data_in_range)
 
@@ -214,9 +208,9 @@ class QuantileClass:
                 else:
                     return range_tuple
 
-
 class RedditRegression(TimestampClass, QuantileClass):
-    # if these cols are required they can be calculated
+
+    ## CLASS LOOKUPS
     COLUMN_FUNCTIONS = {
         "time_in_secs": TimestampClass.get_float_seconds,
         "num_dayofweek": TimestampClass.get_dayofweek,
@@ -233,6 +227,7 @@ class RedditRegression(TimestampClass, QuantileClass):
 
     SMF_PARAMS_LOOKUP = {"aic": "aic", "bic": "bic", "r2": "rsquared"}
 
+    ## DEFAULT VALUES
     DEFAULT_Y_COL = {
         "logistic": "success",
         "linear": "thread_size",
@@ -254,50 +249,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         "mnlogit": mnlogit_accuracy_score,
     }
 
-    def set_up_loggers(self, log_handlers, name):
-        """_Sets up the loggers for the class.
-
-        Parameters
-        ----------
-        log_handlers : list, dict or logging.handler
-            A list, dict or logging.handler to pass to the class loggers.
-        name : str
-            Name of info logger
-        """
-        # set up logging
-        logging.captureWarnings(True)
-
-        self.loggers = {
-            "warnings": logging.getLogger("py.warnings"),
-            "info": logging.getLogger(f"{__name__}_{name}"),
-        }
-        self.loggers["info"].setLevel(logging.INFO)
-        print = self.loggers["info"].info
-
-        if log_handlers is not None:
-            if isinstance(log_handlers, list):
-                for handler in log_handlers:
-                    for key in self.loggers:
-                        self.loggers[key].addHandler(handler)
-
-            elif isinstance(log_handlers, dict):
-                for key in log_handlers:
-                    if isinstance(log_handlers[key], list):
-                        for handler in log_handlers[key]:
-                            self.loggers[key].addHandler(handler)
-                    else:
-                        self.loggers[key].addHandler(log_handlers[key])
-            else:
-                for key in self.loggers:
-                    self.loggers[key].addHandler(log_handlers)
-        else:
-            # stream handler for logging
-            handler = logging.StreamHandler()
-            handler.setLevel(logging.INFO)
-            format = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
-            handler.setFormatter(format)
-            self.loggers["info"].addHandler(handler)
-
+    ## INITIALISE CLASS
     def __init__(self, regression_params: dict, log_handlers=None):
         """Initialise regression data class
 
@@ -364,6 +316,49 @@ class RedditRegression(TimestampClass, QuantileClass):
 
         # back to warning
         pd.options.mode.chained_assignment = "warn"
+    
+    def set_up_loggers(self, log_handlers, name):
+        """Sets up the loggers for the class.
+
+        Parameters
+        ----------
+        log_handlers : list, dict or logging.handler
+            A list, dict or logging.handler to pass to the class loggers.
+        name : str
+            Name of info logger
+        """
+        # set up logging
+        logging.captureWarnings(True)
+
+        self.loggers = {
+            "warnings": logging.getLogger("py.warnings"),
+            "info": logging.getLogger(f"{__name__}_{name}"),
+        }
+        self.loggers["info"].setLevel(logging.INFO)
+
+        if log_handlers is not None:
+            if isinstance(log_handlers, list):
+                for handler in log_handlers:
+                    for key in self.loggers:
+                        self.loggers[key].addHandler(handler)
+
+            elif isinstance(log_handlers, dict):
+                for key in log_handlers:
+                    if isinstance(log_handlers[key], list):
+                        for handler in log_handlers[key]:
+                            self.loggers[key].addHandler(handler)
+                    else:
+                        self.loggers[key].addHandler(log_handlers[key])
+            else:
+                for key in self.loggers:
+                    self.loggers[key].addHandler(log_handlers)
+        else:
+            # stream handler for logging
+            handler = logging.StreamHandler()
+            handler.setLevel(logging.INFO)
+            s_format = logging.Formatter("%(name)s - %(levelname)s - %(message)s")
+            handler.setFormatter(s_format)
+            self.loggers["info"].addHandler(handler)
 
     def construct_regression_params_dict(self, regression_params):
         """ Makes dict to keep track of regression params.
@@ -657,7 +652,7 @@ class RedditRegression(TimestampClass, QuantileClass):
 
         # if need FSS, run FSS
         if "FSS" in self.regression_params:
-            self.loggers["info"].info(f"Running FSS")
+            self.loggers["info"].info("Running FSS")
             self.sm_modstrings = self.run_FSS()
         else:
             self.sm_modstrings = self.regression_params["models"]
@@ -694,6 +689,16 @@ class RedditRegression(TimestampClass, QuantileClass):
             "regression_params": param_dict,
             "metrics": model_results,
         }
+
+    def pickle_to_file(self, filename:str):
+        """Saves class instance to pickle.
+
+        Parameters
+        ----------
+        filename : str
+            file name for pickle file
+        """
+        pickle.dump(self, open(filename, 'wb'))
 
     def get_model_metrics_from_smf_mod(self, smf_mod, conf_int=0.05):
         """Creates parameter dataframe of model metrics for easy output.
@@ -1023,8 +1028,8 @@ class RedditRegression(TimestampClass, QuantileClass):
                 elif kwargs["method"] == "bfgs":
                     kwargs["method"] = "cg"
                 else:
-                    self.loggers["info"].exception()
-                    # raise e
+                    #self.loggers["info"].exception()
+                    raise e
                 run_again = True
                 return run_again, kwargs
 
@@ -1184,7 +1189,10 @@ class RedditRegression(TimestampClass, QuantileClass):
             smf, self.SMF_FUNCTIONS[self.regression_params["regression_type"]]
         )(self.sm_modstrings[mod_key], data=self.__model_data__["cal"])
 
-        smf_model = self.fit_smf_model(smf_model)
+        try:
+            smf_model = self.fit_smf_model(smf_model)
+        except Exception:
+            self.loggers['info'].exception()
 
         return smf_model
 
@@ -1258,7 +1266,7 @@ class RedditRegression(TimestampClass, QuantileClass):
 
         self.num_threads_modelled = num_threads_modelled_df.T
 
-    def output_to_excel(self, outpath, params_to_add={}):
+    def output_to_excel(self, outpath, params_to_add=None):
         """Outputs all regression metrics and params to excel spreadsheet.
 
         Parameters
@@ -1270,8 +1278,9 @@ class RedditRegression(TimestampClass, QuantileClass):
         """
         with pd.ExcelWriter(outpath, engine="xlsxwriter") as writer:
             input_params = self.regression_params.copy()
-            for key in params_to_add:
-                input_params[key] = params_to_add[key]
+            if params_to_add is not None:
+                for key in params_to_add:
+                    input_params[key] = params_to_add[key]
             if self.regression_params["regression_type"] == "mnlogit":
                 input_params.pop("performance_scoring_method")
             self.params_dict_to_df(input_params).to_excel(writer, sheet_name="inputs")
@@ -1703,85 +1712,3 @@ class RedditRegression(TimestampClass, QuantileClass):
             regression_params[key] = FIXED_PARAMS[key]
 
         return regression_params
-
-    def get_author_collection_data(self, date_index):
-        """DEPRECATED
-        Get thread data from collection period only, calculating author activity
-        counts and sentiment means. This should only be used when collection period and
-        model period are completely separate - e.g. no rolling time windows.
-
-        Parameters
-        ----------
-        date_index : int
-            Index of start date of collection window
-
-        Returns
-        -------
-        pd.DataFrame
-            Author activity count, activity ratio and mean sentiment score throughout
-            collection period
-        """
-        # get collection dates
-        collection_dates = self.date_array[
-            date_index : date_index + self.regression_params["collection_window"]
-        ]
-
-        # get thread data in collection dates
-        thread_collection_data = self.thread_data[
-            self.thread_data.timestamp.apply(TimestampClass.get_date).isin(
-                collection_dates
-            )
-        ]
-
-        # separate by activity
-        thread_activity = {
-            "all_activity": thread_collection_data,
-            "post": thread_collection_data[
-                thread_collection_data.thread_id == thread_collection_data.id
-            ],
-            "comment": thread_collection_data[
-                thread_collection_data.thread_id != thread_collection_data.id
-            ],
-        }
-
-        started = False
-        for key in thread_activity:
-            author_activity_count = (
-                thread_activity[key][["author", "id"]]
-                .groupby("author")
-                .count()
-                .rename(columns={"id": f"author_{key}_count"})
-            )
-            if not started:
-                author_activity = author_activity_count
-                started = True
-            else:
-                author_activity = (
-                    pd.concat((author_activity, author_activity_count), axis=1)
-                    .fillna(0)
-                    .astype(int)
-                )
-
-        # get activity ratio
-        author_activity["activity_ratio"] = (
-            author_activity.author_comment_count - author_activity.author_post_count
-        ) / author_activity.author_all_activity_count
-
-        # get mean sentiment score
-        author_mean_sentiment = (
-            thread_activity["all_activity"][["author", "sentiment_score"]]
-            .groupby("author")
-            .mean()
-            .rename(columns={"sentiment_score": f"mean_author_sentiment"})
-        )
-
-        # combine to form author info df
-        author_info = pd.concat(
-            (
-                author_activity[["author_all_activity_count", "activity_ratio"]],
-                author_mean_sentiment,
-            ),
-            axis=1,
-        )
-
-        return author_info
