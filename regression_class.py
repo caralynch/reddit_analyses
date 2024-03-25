@@ -33,6 +33,7 @@ Add thread size thresholding
 Add domain tracker - e.g. domain frequency or something?
 """
 
+
 class TimestampClass:
     """Class for various timestamp functions
     """
@@ -208,6 +209,7 @@ class QuantileClass:
                 else:
                     return range_tuple
 
+
 class RedditRegression(TimestampClass, QuantileClass):
 
     ## CLASS LOOKUPS
@@ -232,21 +234,6 @@ class RedditRegression(TimestampClass, QuantileClass):
         "logistic": "success",
         "linear": "thread_size",
         "mnlogit": "thread_size",
-    }
-
-    DEFAULT_QUANTILES = [0.25, 0.5, 0.75]
-
-    @staticmethod
-    def mnlogit_accuracy_score(estimator, X, y):
-        probabilities = pd.DataFrame(estimator.predict_proba(X))
-        y_pred = probabilities.idxmax(axis=1)
-        value_counts = (y_pred == y).value_counts()
-        return value_counts.loc[True] / value_counts.sum()
-
-    PERFORMANCE_SCORING_METHODS = {
-        "logistic": "roc_auc",
-        "linear": "r2",
-        "mnlogit": mnlogit_accuracy_score,
     }
 
     ## INITIALISE CLASS
@@ -287,6 +274,12 @@ class RedditRegression(TimestampClass, QuantileClass):
             name=f"{regression_params['name']}_{regression_params['regression_type']}",
         )
 
+        self.PERFORMANCE_SCORING_METHODS = {
+            "logistic": "roc_auc",
+            "linear": "r2",
+            "mnlogit": self.mnlogit_accuracy_score,
+        }
+
         regression_params = regression_params.copy()
 
         self.regression_data = regression_params["regression_data"]
@@ -316,7 +309,7 @@ class RedditRegression(TimestampClass, QuantileClass):
 
         # back to warning
         pd.options.mode.chained_assignment = "warn"
-    
+
     def set_up_loggers(self, log_handlers, name):
         """Sets up the loggers for the class.
 
@@ -334,7 +327,7 @@ class RedditRegression(TimestampClass, QuantileClass):
             "warnings": logging.getLogger("py.warnings"),
             "info": logging.getLogger(f"{__name__}_{name}"),
         }
-        self.loggers["info"].setLevel(logging.INFO)
+        self.loggers["info"].setLevel(logging.DEBUG)
 
         if log_handlers is not None:
             if isinstance(log_handlers, list):
@@ -385,7 +378,7 @@ class RedditRegression(TimestampClass, QuantileClass):
             self.regression_params["regression_type"] == "mnlogit"
             and "quantiles" not in self.regression_params
         ):
-            self.regression_params["quantiles"] = self.DEFAULT_QUANTILES
+            self.regression_params["quantiles"] = [0.25, 0.5, 0.75]
 
         # author activity threshold
         if "thresholds" in self.regression_params:
@@ -673,7 +666,9 @@ class RedditRegression(TimestampClass, QuantileClass):
         self.smf_models = {}
         for mod_key in self.sm_modstrings:
             self.loggers["info"].info(f"Model {mod_key}")
+            self.loggers["info"].debug('    Running regression')
             self.smf_models[mod_key] = self.run_regression(mod_key)
+            self.loggers["info"].debug('    Getting regression metrics')
             model_results[mod_key] = self.get_regression_metrics(
                 self.smf_models[mod_key], mod_key
             )
@@ -690,7 +685,7 @@ class RedditRegression(TimestampClass, QuantileClass):
             "metrics": model_results,
         }
 
-    def pickle_to_file(self, filename:str):
+    def pickle_to_file(self, filename: str):
         """Saves class instance to pickle.
 
         Parameters
@@ -698,7 +693,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         filename : str
             file name for pickle file
         """
-        pickle.dump(self, open(filename, 'wb'))
+        pickle.dump(self, open(filename, "wb"))
 
     def get_model_metrics_from_smf_mod(self, smf_mod, conf_int=0.05):
         """Creates parameter dataframe of model metrics for easy output.
@@ -1028,7 +1023,7 @@ class RedditRegression(TimestampClass, QuantileClass):
                 elif kwargs["method"] == "bfgs":
                     kwargs["method"] = "cg"
                 else:
-                    #self.loggers["info"].exception()
+                    # self.loggers["info"].exception()
                     raise e
                 run_again = True
                 return run_again, kwargs
@@ -1145,9 +1140,11 @@ class RedditRegression(TimestampClass, QuantileClass):
             ).reset_index(drop=True)
 
         for metric in self.regression_params["metrics"]:
+            self.loggers['info'].debug(f"       Getting {metric}")
             if metric in custom_params:
 
                 for calval in y_pred:
+                    self.loggers['info'].debug(f"       Getting {calval}")
 
                     y_true = self.__model_data__[calval][
                         self.regression_params["y_col"]
@@ -1192,7 +1189,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         try:
             smf_model = self.fit_smf_model(smf_model)
         except Exception:
-            self.loggers['info'].exception()
+            self.loggers["info"].exception()
 
         return smf_model
 
@@ -1577,6 +1574,13 @@ class RedditRegression(TimestampClass, QuantileClass):
         )
         df.index.name = "param"
         return df
+
+    @staticmethod
+    def mnlogit_accuracy_score(estimator, X, y):
+        probabilities = pd.DataFrame(estimator.predict_proba(X))
+        y_pred = probabilities.idxmax(axis=1)
+        value_counts = (y_pred == y).value_counts()
+        return value_counts.loc[True] / value_counts.sum()
 
     @staticmethod
     def mnlogit_accuracy_score_from_y_pred(y_true, y_pred):

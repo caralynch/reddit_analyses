@@ -22,7 +22,8 @@ from regression_class import RedditRegression as RR
 REGRESSION_INFILE = "regression_thread_data.p"
 THREAD_INFILE = "clean_5_thread_data.p"
 SUBREDDITS = ["books", "crypto", "conspiracy", "politics"]
-REGRESSION_TYPES = ["logistic", "linear", "mnlogit"]
+REGRESSION_TYPES = ["mnlogit"]
+#REGRESSION_TYPES = ["logistic", "linear", "mnlogit"]
 
 start_time = dt.now().strftime("%d_%m_%Y__%H_%M_%S")
 OUTDIR = f"regression_outputs/{start_time}"
