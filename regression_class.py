@@ -1376,12 +1376,13 @@ class RedditRegression(TimestampClass, QuantileClass):
                 ax_list[i].set_ylabel(ylabel)
             j += 1
 
-        ax.set_title(f"{name} information criteria vs number of features")
+        ax.set_title(f"{name} {ylabel} vs number of features")
         ax.set_xlabel(xlabel)
         fig.legend(bbox_to_anchor=legend_loc)
 
         if outfile:
             plt.savefig(outfile)
+            plt.close()
         if show:
             plt.show()
         else:
