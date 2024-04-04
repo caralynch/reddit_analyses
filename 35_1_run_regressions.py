@@ -2,6 +2,7 @@
 import pickle
 import os
 import sys
+import gc
 
 # time tracking
 from datetime import datetime as dt
@@ -21,45 +22,68 @@ from regression_class import RedditRegression as RR
 # PARAMS_DICT_INFILE = f"{OUTDIR}/input_params.p"
 REGRESSION_INFILE = "regression_thread_data.p"
 THREAD_INFILE = "clean_5_thread_data.p"
-SUBREDDITS = ["books", "crypto", "conspiracy", "politics"]
-REGRESSION_TYPES = ["mnlogit"]
-#REGRESSION_TYPES = ["logistic", "linear", "mnlogit"]
+#SUBREDDITS = ["books", "crypto", "conspiracy"]
+SUBREDDITS = ["politics"]
+# SUBREDDITS = ['conspiracy', 'politics']
+# REGRESSION_TYPES = ["mnlogit"]
+REGRESSION_TYPES = ["logistic", "linear", "mnlogit"]
+MULTIPROCESS = False
 
 start_time = dt.now().strftime("%d_%m_%Y__%H_%M_%S")
-OUTDIR = f"regression_outputs/{start_time}"
+start_date = dt.now().strftime("%d_%m_%Y")
+OUTDIR = f"regression_outputs/{start_date}_c7_m14"
 LOGDIR = f"{OUTDIR}/logs"
 RESULTSDIR = f"{OUTDIR}/results"
-#OUTFILE = f"{OUTDIR}/regressions.p"
+# OUTFILE = f"{OUTDIR}/regressions.p"
+
+extra_params = {"collection_window": 7, "model_window": 14}
 
 
 def run_regression(params_dict):
     try:
         name = f"{params_dict['name']}_{params_dict['regression_type']}"
-        logger.info(f"  {name}")
-        # logfile handler
+        if MULTIPROCESS:
+            logger.info(f"  {name}")
+        # logfile handlers
         sub_f_handler = logging.FileHandler(f"{LOGDIR}/{name}.log")
         sub_f_handler.setLevel(logging.INFO)
         sub_f_handler.setFormatter(f_format)
-        # add handlers to the logger
-        handlers = {"info": sub_f_handler, "warnings": sub_f_handler}
+        if not MULTIPROCESS:
+            sub_c_handler = logging.StreamHandler()
+            sub_c_handler.setLevel(logging.INFO)
+            c_format = logging.Formatter(
+                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+            )
+            sub_c_handler.setFormatter(c_format)
+            handlers = {
+                "info": [sub_f_handler, sub_c_handler],
+                "warnings": sub_f_handler,
+            }
+            logger.info("       handlers added")
+            logger.info("       creating RR instance")
+        else:
+            handlers = {"info": sub_f_handler, "warnings": sub_f_handler}
+            
         regmod = RR(params_dict, log_handlers=handlers)
+
+        if not MULTIPROCESS:
+            logger.info("       running main")
         regmod.main()
     except Exception as e:
         logger.exception(f" Exception occurred in {name} process")
     finally:
         try:
             logger.info(f"  Pickling {name} results")
-            regmod.pickle_to_file(filename=f'{RESULTSDIR}/{name}.p')
+            regmod.pickle_to_file(filename=f"{RESULTSDIR}/{name}.p")
         except Exception as e:
             logger.exception(f"  Exception occurred when pickling {name} results!")
+        del regmod
         logger.info(f"  {name} FINISHED")
-        
-        
 
 
 if __name__ == "__main__":
     # warnings.simplefilter("ignore")
-    #warnings.filterwarnings("ignore", category=RuntimeWarning)
+    # warnings.filterwarnings("ignore", category=RuntimeWarning)
     start = dt.now()
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
@@ -80,7 +104,10 @@ if __name__ == "__main__":
         raise e
 
     # logfile handler
-    f_handler = logging.FileHandler(f"{LOGDIR}/main.log")
+    main_logfile = f"{LOGDIR}/main.log"
+    if os.path.isfile(main_logfile):
+        main_logfile = f"{LOGDIR}/main_{start_time}.log"
+    f_handler = logging.FileHandler(main_logfile)
     f_handler.setLevel(logging.INFO)
     f_format = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     f_handler.setFormatter(f_format)
@@ -108,33 +135,82 @@ if __name__ == "__main__":
         logger.exception("Exception occurred during file read in")
         raise e
 
+    # want to manage memory effectively
     try:
-        logger.info("## Creating parameter dictionaries ##")
-        param_dict_list = []
+        logger.info("## Deleting irrelevant data ##")
+        to_del = [x for x in regression_df if x not in SUBREDDITS]
+        for key in to_del:
+            del regression_df[key]
+            del thread_df[key]
+        logger.info("## Collecting garbage ##")
+        gc.collect()
+    except:
+        logger.exception("  Something went wrong with data deletion.")
+
+    if MULTIPROCESS:
+        try:
+            logger.info("## Creating parameter dictionaries ##")
+            param_dict_list = []
+            for subreddit in SUBREDDITS:
+                for regression_type in REGRESSION_TYPES:
+                    param_dict_list.append(
+                        RR.create_param_dict(
+                            subreddit,
+                            regression_type,
+                            regression_df[subreddit],
+                            thread_df[subreddit],
+                            **extra_params,
+                        )
+                    )
+            # delete dicts no longer needed
+            del regression_df
+            del thread_df
+            # collect garbage
+            gc.collect()
+            logger.info("## Finished creating parameter dictionaries ##")
+        except Exception as e:
+            logger.exception(
+                f"Exception occured when creating {subreddit} {regression_type} dictionary"
+            )
+            raise e
+
+        try:
+            logger.info("## Starting pool processes ##")
+            with Pool() as p:
+                p.map(run_regression, param_dict_list)
+
+            logger.info("## Finished pool processes ##")
+            # delete param list as no longer need
+            del param_dict_list
+            gc.collect()
+        except Exception as e:
+            logger.exception("Exception occurred with pool process")
+    else:
         for subreddit in SUBREDDITS:
+            logger.info(f"## {subreddit} ##")
             for regression_type in REGRESSION_TYPES:
-                param_dict_list.append(
-                    RR.create_param_dict(
+                logger.info(f"  # {regression_type} #")
+                try:
+                    logger.info("       Creating parameter dictionary")
+                    param_dict = RR.create_param_dict(
                         subreddit,
                         regression_type,
                         regression_df[subreddit],
                         thread_df[subreddit],
+                        **extra_params,
                     )
-                )
-        logger.info("## Finished creating parameter dictionaries ##")
-    except Exception as e:
-        logger.exception(
-            f"Exception occured when creating {subreddit} {regression_type} dictionary"
-        )
-        raise e
-
-    try:
-        logger.info("## Starting pool processes ##")
-        with Pool() as p:
-            p.map(run_regression, param_dict_list)
-
-        logger.info("## Finished pool processes ##")
-    except Exception as e:
-        logger.exception("Exception occurred with pool process")
+                    logger.info("       Created parameter dictionary")
+                    logger.info("       Running regression")
+                    run_regression(param_dict)
+                    logger.info("       Finished running regression")
+                except Exception as e:
+                    logger.exception(
+                        f" Exception occured with {subreddit} {regression_type}"
+                    )
+            logger.info("   # Deleting irrelevant data #")
+            del regression_df[subreddit]
+            del thread_df[subreddit]
+            logger.info("   # Collecting garbage #")
+            gc.collect()
 
     logger.info(f"FINISHED at {dt.now()}, time taken {dt.now()-start}")
