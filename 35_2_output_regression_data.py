@@ -17,10 +17,11 @@ LOGFILE = "regression_outputs/26_03_2024_processing"
 def run_outputs(filepath: str, outdir: str, logger):
     logger.info(f"{filepath}")
     filename = os.path.basename(filepath).split(".")[0]
+    run_type = " ".join(os.path.dirname(filepath).split("/")[1].split("_")[-2:])
     try:
         logger.info("    Reading in")
         result_pickle = pickle.load(open(filepath, "rb"))
-        outpath = f"{outdir}/{filename}.xlsx"
+        outpath = f"{outdir}/{filename}_{run_type}.xlsx"
         logger.info(f"    Outputting results to {outpath}")
         result_pickle.output_to_excel(outpath)
 
@@ -34,7 +35,7 @@ def run_outputs(filepath: str, outdir: str, logger):
                 metrics_to_plot,
                 metric,
                 name=filename,
-                outfile=f"{outdir}/{filename}_{metric}.png",
+                outfile=f"{outdir}/{filename}_{run_type}_{metric}.png",
                 show=False,
             )
 
