@@ -34,7 +34,7 @@ def run_outputs(filepath: str, outdir: str, logger):
             result_pickle.plot_metrics_vs_features(
                 metrics_to_plot,
                 metric,
-                name=filename,
+                name=f'{filename} {run_type}',
                 outfile=f"{outdir}/{filename}_{run_type}_{metric}.png",
                 show=False,
             )
