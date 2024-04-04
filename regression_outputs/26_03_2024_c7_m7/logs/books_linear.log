@@ -1,0 +1,54 @@
+2024-03-26 20:50:48,121 - regression_class_books_linear - INFO - Running FSS
+2024-03-26 20:50:48,155 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+2024-03-26 20:50:48,155 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+2024-03-26 20:50:48,157 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+2024-03-26 20:50:48,157 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+2024-03-26 20:50:48,157 - regression_class_books_linear - INFO - Model 1
+2024-03-26 20:50:48,166 - regression_class_books_linear - INFO - Model 2
+2024-03-26 20:50:48,175 - regression_class_books_linear - INFO - Model 3
+2024-03-26 20:50:48,186 - regression_class_books_linear - INFO - Model 4
+2024-03-26 20:50:48,197 - regression_class_books_linear - INFO - Model 5
+2024-03-26 20:50:48,211 - regression_class_books_linear - INFO - Model 6
+2024-03-26 20:50:48,225 - regression_class_books_linear - INFO - Model 7
+2024-03-26 20:50:48,240 - regression_class_books_linear - INFO - Model 8
+2024-03-26 20:50:55,459 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+2024-03-26 20:50:55,459 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+2024-03-26 20:50:55,460 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+2024-03-26 20:50:55,461 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+2024-03-26 20:51:55,626 - regression_class_books_linear - INFO - Running FSS
+2024-03-26 20:51:55,684 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+2024-03-26 20:51:55,685 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+2024-03-26 20:51:55,688 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+2024-03-26 20:51:55,688 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+2024-03-26 20:51:55,689 - regression_class_books_linear - INFO - Model 1
+2024-03-26 20:51:55,710 - regression_class_books_linear - INFO - Model 2
+2024-03-26 20:51:55,727 - regression_class_books_linear - INFO - Model 3
+2024-03-26 20:51:55,747 - regression_class_books_linear - INFO - Model 4
+2024-03-26 20:51:55,766 - regression_class_books_linear - INFO - Model 5
+2024-03-26 20:51:55,788 - regression_class_books_linear - INFO - Model 6
+2024-03-26 20:51:55,811 - regression_class_books_linear - INFO - Model 7
+2024-03-26 20:51:55,837 - regression_class_books_linear - INFO - Model 8

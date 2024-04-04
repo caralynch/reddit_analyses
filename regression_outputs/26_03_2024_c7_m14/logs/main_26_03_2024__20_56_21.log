@@ -1,0 +1,41 @@
+2024-03-26 20:56:21,599 - __main__ - INFO - Start time 2024-03-26 20:56:21.599688, PID 241923
+2024-03-26 20:56:21,600 - __main__ - INFO - ## Reading in files ##
+2024-03-26 20:56:21,600 - __main__ - INFO -    Regression infile
+2024-03-26 20:56:21,619 - __main__ - INFO -    Thread infile
+2024-03-26 20:56:24,453 - __main__ - INFO - ## Finished reading in files ##
+2024-03-26 20:56:24,453 - __main__ - INFO - ## Deleting irrelevant data ##
+2024-03-26 20:56:24,521 - __main__ - INFO - ## Collecting garbage ##
+2024-03-26 20:56:24,579 - __main__ - INFO - ## politics ##
+2024-03-26 20:56:24,579 - __main__ - INFO -   # logistic #
+2024-03-26 20:56:24,579 - __main__ - INFO -        Creating parameter dictionary
+2024-03-26 20:56:24,579 - __main__ - INFO -        Created parameter dictionary
+2024-03-26 20:56:24,579 - __main__ - INFO -        Running regression
+2024-03-26 20:56:24,579 - __main__ - INFO -        handlers added
+2024-03-26 20:56:24,579 - __main__ - INFO -        creating RR instance
+2024-03-26 20:57:23,901 - __main__ - INFO -        running main
+2024-03-26 21:04:00,369 - __main__ - INFO -   Pickling politics_logistic results
+2024-03-26 21:04:02,967 - __main__ - INFO -   politics_logistic FINISHED
+2024-03-26 21:04:02,967 - __main__ - INFO -        Finished running regression
+2024-03-26 21:04:02,967 - __main__ - INFO -   # linear #
+2024-03-26 21:04:02,967 - __main__ - INFO -        Creating parameter dictionary
+2024-03-26 21:04:02,968 - __main__ - INFO -        Created parameter dictionary
+2024-03-26 21:04:02,968 - __main__ - INFO -        Running regression
+2024-03-26 21:04:02,968 - __main__ - INFO -        handlers added
+2024-03-26 21:04:02,968 - __main__ - INFO -        creating RR instance
+2024-03-26 21:05:02,062 - __main__ - INFO -        running main
+2024-03-26 21:11:29,087 - __main__ - INFO -   Pickling politics_linear results
+2024-03-26 21:11:31,571 - __main__ - INFO -   politics_linear FINISHED
+2024-03-26 21:11:31,571 - __main__ - INFO -        Finished running regression
+2024-03-26 21:11:31,571 - __main__ - INFO -   # mnlogit #
+2024-03-26 21:11:31,571 - __main__ - INFO -        Creating parameter dictionary
+2024-03-26 21:11:31,571 - __main__ - INFO -        Created parameter dictionary
+2024-03-26 21:11:31,571 - __main__ - INFO -        Running regression
+2024-03-26 21:11:31,571 - __main__ - INFO -        handlers added
+2024-03-26 21:11:31,571 - __main__ - INFO -        creating RR instance
+2024-03-26 21:12:30,318 - __main__ - INFO -        running main
+2024-03-26 21:18:58,540 - __main__ - INFO -   Pickling politics_mnlogit results
+2024-03-26 21:19:01,033 - __main__ - INFO -   politics_mnlogit FINISHED
+2024-03-26 21:19:01,034 - __main__ - INFO -        Finished running regression
+2024-03-26 21:19:01,034 - __main__ - INFO -    # Deleting irrelevant data #
+2024-03-26 21:19:01,034 - __main__ - INFO -    # Collecting garbage #
+2024-03-26 21:19:01,075 - __main__ - INFO - FINISHED at 2024-03-26 21:19:01.075476, time taken 0:22:39.475807

@@ -1,0 +1,37 @@
+2024-03-26 16:22:36,298 - __main__ - INFO - Start time 2024-03-26 16:22:36.298240, PID 54920
+2024-03-26 16:22:36,298 - __main__ - INFO - ## Reading in files ##
+2024-03-26 16:22:36,298 - __main__ - INFO -    Regression infile
+2024-03-26 16:22:36,320 - __main__ - INFO -    Thread infile
+2024-03-26 16:22:39,634 - __main__ - INFO - ## Finished reading in files ##
+2024-03-26 16:22:39,634 - __main__ - INFO - ## Creating parameter dictionaries ##
+2024-03-26 16:22:39,634 - __main__ - INFO - ## Finished creating parameter dictionaries ##
+2024-03-26 16:22:39,634 - __main__ - INFO - ## Starting pool processes ##
+2024-03-26 16:22:40,146 - __main__ - INFO -   books_logistic
+2024-03-26 16:22:40,399 - __main__ - INFO -   books_linear
+2024-03-26 16:22:40,673 - __main__ - INFO -   books_mnlogit
+2024-03-26 16:22:42,079 - __main__ - INFO -   crypto_logistic
+2024-03-26 16:22:43,128 - __main__ - INFO -   crypto_linear
+2024-03-26 16:22:44,192 - __main__ - INFO -   crypto_mnlogit
+2024-03-26 16:22:45,204 - __main__ - INFO -   conspiracy_logistic
+2024-03-26 16:22:46,915 - __main__ - INFO -   conspiracy_linear
+2024-03-26 16:22:49,050 - __main__ - INFO -   Pickling books_linear results
+2024-03-26 16:22:49,115 - __main__ - INFO -   books_linear FINISHED
+2024-03-26 16:22:49,631 - __main__ - INFO -   conspiracy_mnlogit
+2024-03-26 16:22:49,990 - __main__ - INFO -   Pickling books_logistic results
+2024-03-26 16:22:50,067 - __main__ - INFO -   books_logistic FINISHED
+2024-03-26 16:22:58,718 - __main__ - INFO -   Pickling books_mnlogit results
+2024-03-26 16:22:58,786 - __main__ - INFO -   books_mnlogit FINISHED
+2024-03-26 16:23:26,508 - __main__ - INFO -   Pickling crypto_logistic results
+2024-03-26 16:23:26,827 - __main__ - INFO -   crypto_logistic FINISHED
+2024-03-26 16:23:27,512 - __main__ - INFO -   Pickling conspiracy_logistic results
+2024-03-26 16:23:27,819 - __main__ - INFO -   conspiracy_logistic FINISHED
+2024-03-26 16:23:29,454 - __main__ - INFO -   Pickling conspiracy_linear results
+2024-03-26 16:23:29,776 - __main__ - INFO -   conspiracy_linear FINISHED
+2024-03-26 16:23:30,471 - __main__ - INFO -   Pickling crypto_mnlogit results
+2024-03-26 16:23:30,676 - __main__ - INFO -   crypto_mnlogit FINISHED
+2024-03-26 16:23:31,080 - __main__ - INFO -   Pickling crypto_linear results
+2024-03-26 16:23:31,285 - __main__ - INFO -   crypto_linear FINISHED
+2024-03-26 16:23:32,094 - __main__ - INFO -   Pickling conspiracy_mnlogit results
+2024-03-26 16:23:32,266 - __main__ - INFO -   conspiracy_mnlogit FINISHED
+2024-03-26 16:23:32,381 - __main__ - INFO - ## Finished pool processes ##
+2024-03-26 16:23:32,381 - __main__ - INFO - FINISHED at 2024-03-26 16:23:32.381393, time taken 0:00:56.083174

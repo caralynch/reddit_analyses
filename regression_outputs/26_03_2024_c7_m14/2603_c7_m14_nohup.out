@@ -1,0 +1,57 @@
+2024-03-26 20:54:29,539 - __main__ - INFO - Start time 2024-03-26 20:54:29.539434, PID 240485
+2024-03-26 20:54:29,539 - __main__ - INFO - ## Reading in files ##
+2024-03-26 20:54:29,540 - __main__ - INFO -    Regression infile
+2024-03-26 20:54:29,560 - __main__ - INFO -    Thread infile
+2024-03-26 20:54:32,570 - __main__ - INFO - ## Finished reading in files ##
+2024-03-26 20:54:32,570 - __main__ - INFO - ## Deleting irrelevant data ##
+2024-03-26 20:54:32,853 - __main__ - INFO - ## Collecting garbage ##
+2024-03-26 20:54:32,893 - __main__ - INFO - ## Creating parameter dictionaries ##
+2024-03-26 20:54:32,893 - __main__ - INFO - ## Finished creating parameter dictionaries ##
+2024-03-26 20:54:32,893 - __main__ - INFO - ## Starting pool processes ##
+2024-03-26 20:54:33,271 - __main__ - INFO -   books_logistic
+2024-03-26 20:54:33,271 - __main__ - INFO -        handlers added
+2024-03-26 20:54:33,271 - __main__ - INFO -        creating RR instance
+2024-03-26 20:54:33,491 - __main__ - INFO -   books_linear
+2024-03-26 20:54:33,491 - __main__ - INFO -        handlers added
+2024-03-26 20:54:33,491 - __main__ - INFO -        creating RR instance
+2024-03-26 20:54:33,722 - __main__ - INFO -   books_mnlogit
+2024-03-26 20:54:33,723 - __main__ - INFO -        handlers added
+2024-03-26 20:54:33,723 - __main__ - INFO -        creating RR instance
+2024-03-26 20:54:35,132 - __main__ - INFO -   crypto_logistic
+2024-03-26 20:54:35,132 - __main__ - INFO -        handlers added
+2024-03-26 20:54:35,132 - __main__ - INFO -        creating RR instance
+2024-03-26 20:54:36,624 - __main__ - INFO -   crypto_linear
+2024-03-26 20:54:36,625 - __main__ - INFO -        handlers added
+2024-03-26 20:54:36,625 - __main__ - INFO -        creating RR instance
+2024-03-26 20:54:38,234 - __main__ - INFO -   crypto_mnlogit
+2024-03-26 20:54:38,234 - __main__ - INFO -        handlers added
+2024-03-26 20:54:38,235 - __main__ - INFO -        creating RR instance
+2024-03-26 20:54:39,832 - __main__ - INFO -   conspiracy_logistic
+2024-03-26 20:54:39,833 - __main__ - INFO -        handlers added
+2024-03-26 20:54:39,833 - __main__ - INFO -        creating RR instance
+2024-03-26 20:54:41,305 - __main__ - INFO -   conspiracy_linear
+2024-03-26 20:54:41,306 - __main__ - INFO -        handlers added
+2024-03-26 20:54:41,306 - __main__ - INFO -        creating RR instance
+2024-03-26 20:54:45,443 - __main__ - INFO -   Pickling books_linear results
+2024-03-26 20:54:45,506 - __main__ - INFO -   books_linear FINISHED
+2024-03-26 20:54:45,719 - __main__ - INFO -   Pickling books_logistic results
+2024-03-26 20:54:45,788 - __main__ - INFO -   books_logistic FINISHED
+2024-03-26 20:54:46,119 - __main__ - INFO -   conspiracy_mnlogit
+2024-03-26 20:54:46,122 - __main__ - INFO -        handlers added
+2024-03-26 20:54:46,122 - __main__ - INFO -        creating RR instance
+2024-03-26 20:54:52,661 - __main__ - INFO -   Pickling books_mnlogit results
+2024-03-26 20:54:52,741 - __main__ - INFO -   books_mnlogit FINISHED
+2024-03-26 20:55:32,917 - __main__ - INFO -   Pickling crypto_logistic results
+2024-03-26 20:55:33,165 - __main__ - INFO -   crypto_logistic FINISHED
+2024-03-26 20:55:35,461 - __main__ - INFO -   Pickling crypto_linear results
+2024-03-26 20:55:36,060 - __main__ - INFO -   crypto_linear FINISHED
+2024-03-26 20:55:38,889 - __main__ - INFO -   Pickling conspiracy_linear results
+2024-03-26 20:55:39,369 - __main__ - INFO -   conspiracy_linear FINISHED
+2024-03-26 20:55:40,332 - __main__ - INFO -   Pickling crypto_mnlogit results
+2024-03-26 20:55:40,486 - __main__ - INFO -   Pickling conspiracy_mnlogit results
+2024-03-26 20:55:40,620 - __main__ - INFO -   crypto_mnlogit FINISHED
+2024-03-26 20:55:40,727 - __main__ - INFO -   conspiracy_mnlogit FINISHED
+2024-03-26 20:55:41,801 - __main__ - INFO -   Pickling conspiracy_logistic results
+2024-03-26 20:55:42,010 - __main__ - INFO -   conspiracy_logistic FINISHED
+2024-03-26 20:55:42,082 - __main__ - INFO - ## Finished pool processes ##
+2024-03-26 20:55:42,082 - __main__ - INFO - FINISHED at 2024-03-26 20:55:42.082549, time taken 0:01:12.543137

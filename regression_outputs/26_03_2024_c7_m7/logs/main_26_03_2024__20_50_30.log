@@ -1,0 +1,48 @@
+2024-03-26 20:50:30,129 - __main__ - INFO - Start time 2024-03-26 20:50:30.128857, PID 237572
+2024-03-26 20:50:30,129 - __main__ - INFO - ## Reading in files ##
+2024-03-26 20:50:30,129 - __main__ - INFO -    Regression infile
+2024-03-26 20:50:30,149 - __main__ - INFO -    Thread infile
+2024-03-26 20:50:33,051 - __main__ - INFO - ## Finished reading in files ##
+2024-03-26 20:50:33,051 - __main__ - INFO - ## Deleting irrelevant data ##
+2024-03-26 20:50:33,343 - __main__ - INFO - ## Collecting garbage ##
+2024-03-26 20:50:33,387 - __main__ - INFO - ## books ##
+2024-03-26 20:50:33,387 - __main__ - INFO -   # logistic #
+2024-03-26 20:50:33,387 - __main__ - INFO -        Creating parameter dictionary
+2024-03-26 20:50:33,387 - __main__ - INFO -        Created parameter dictionary
+2024-03-26 20:50:33,387 - __main__ - INFO -        Running regression
+2024-03-26 20:50:33,387 - __main__ - INFO -        handlers added
+2024-03-26 20:50:33,388 - __main__ - INFO -        creating RR instance
+2024-03-26 20:50:34,854 - __main__ - INFO -        running main
+2024-03-26 20:50:40,978 - __main__ - INFO -   Pickling books_logistic results
+2024-03-26 20:50:41,038 - __main__ - INFO -   books_logistic FINISHED
+2024-03-26 20:50:41,038 - __main__ - INFO -        Finished running regression
+2024-03-26 20:50:41,038 - __main__ - INFO -   # linear #
+2024-03-26 20:50:41,038 - __main__ - INFO -        Creating parameter dictionary
+2024-03-26 20:50:41,038 - __main__ - INFO -        Created parameter dictionary
+2024-03-26 20:50:41,038 - __main__ - INFO -        Running regression
+2024-03-26 20:50:41,038 - __main__ - INFO -        handlers added
+2024-03-26 20:50:41,038 - __main__ - INFO -        creating RR instance
+2024-03-26 20:50:42,521 - __main__ - INFO -        running main
+2024-03-26 20:50:48,257 - __main__ - INFO -   Pickling books_linear results
+2024-03-26 20:50:48,294 - __main__ - INFO -   books_linear FINISHED
+2024-03-26 20:50:48,294 - __main__ - INFO -        Finished running regression
+2024-03-26 20:50:48,294 - __main__ - INFO -   # mnlogit #
+2024-03-26 20:50:48,294 - __main__ - INFO -        Creating parameter dictionary
+2024-03-26 20:50:48,294 - __main__ - INFO -        Created parameter dictionary
+2024-03-26 20:50:48,294 - __main__ - INFO -        Running regression
+2024-03-26 20:50:48,294 - __main__ - INFO -        handlers added
+2024-03-26 20:50:48,294 - __main__ - INFO -        creating RR instance
+2024-03-26 20:50:49,742 - __main__ - INFO -        running main
+2024-03-26 20:50:55,894 - __main__ - INFO -   Pickling books_mnlogit results
+2024-03-26 20:50:55,943 - __main__ - INFO -   books_mnlogit FINISHED
+2024-03-26 20:50:55,943 - __main__ - INFO -        Finished running regression
+2024-03-26 20:50:55,943 - __main__ - INFO -    # Deleting irrelevant data #
+2024-03-26 20:50:55,943 - __main__ - INFO -    # Collecting garbage #
+2024-03-26 20:50:55,986 - __main__ - INFO - ## crypto ##
+2024-03-26 20:50:55,986 - __main__ - INFO -   # logistic #
+2024-03-26 20:50:55,986 - __main__ - INFO -        Creating parameter dictionary
+2024-03-26 20:50:55,993 - __main__ - INFO -        Created parameter dictionary
+2024-03-26 20:50:55,993 - __main__ - INFO -        Running regression
+2024-03-26 20:50:55,993 - __main__ - INFO -        handlers added
+2024-03-26 20:50:55,993 - __main__ - INFO -        creating RR instance
+2024-03-26 20:51:02,942 - __main__ - INFO -        running main

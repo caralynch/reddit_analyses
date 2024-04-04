@@ -1,0 +1,21 @@
+2024-03-26 20:55:38,160 - regression_class_conspiracy_linear - INFO - Running FSS
+2024-03-26 20:55:38,347 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+2024-03-26 20:55:38,347 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+2024-03-26 20:55:38,349 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+2024-03-26 20:55:38,349 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+2024-03-26 20:55:38,350 - regression_class_conspiracy_linear - INFO - Model 1
+2024-03-26 20:55:38,419 - regression_class_conspiracy_linear - INFO - Model 2
+2024-03-26 20:55:38,437 - regression_class_conspiracy_linear - INFO - Model 3
+2024-03-26 20:55:38,502 - regression_class_conspiracy_linear - INFO - Model 4
+2024-03-26 20:55:38,580 - regression_class_conspiracy_linear - INFO - Model 5
+2024-03-26 20:55:38,657 - regression_class_conspiracy_linear - INFO - Model 6
+2024-03-26 20:55:38,729 - regression_class_conspiracy_linear - INFO - Model 7
+2024-03-26 20:55:38,784 - regression_class_conspiracy_linear - INFO - Model 8
