@@ -24,6 +24,8 @@
 
 - Data used for regressions: `regression_thread_data.p`
 
+- Data used for regressions INCLUDING domain pagerank score from https://www.domcop.com/top-10-million-websites: `regression_thread_data_april_2024.p`
+
 - regression outputs: `logit_regression_params.xlsx`, `logit_regression_params_v2.xlsx`(includes dataset sizes, skewness, sqrt and without intercept)
 
 # Analyses

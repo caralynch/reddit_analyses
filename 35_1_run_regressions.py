@@ -20,23 +20,41 @@ from multiprocessing import Pool
 from regression_class import RedditRegression as RR
 
 # PARAMS_DICT_INFILE = f"{OUTDIR}/input_params.p"
-REGRESSION_INFILE = "regression_thread_data.p"
+REGRESSION_INFILE = "regression_thread_data_april_2024.p"
 THREAD_INFILE = "clean_5_thread_data.p"
-#SUBREDDITS = ["books", "crypto", "conspiracy"]
-SUBREDDITS = ["politics"]
+SUBREDDITS = ["books", "crypto", "conspiracy"]
+#SUBREDDITS = ["politics"]
 # SUBREDDITS = ['conspiracy', 'politics']
 # REGRESSION_TYPES = ["mnlogit"]
 REGRESSION_TYPES = ["logistic", "linear", "mnlogit"]
-MULTIPROCESS = False
+if 'politics' in SUBREDDITS:
+    MULTIPROCESS = False
+else:
+    MULTIPROCESS = True
+
+COLLECTION_WINDOW = 7
+MODEL_WINDOW = 7
 
 start_time = dt.now().strftime("%d_%m_%Y__%H_%M_%S")
 start_date = dt.now().strftime("%d_%m_%Y")
-OUTDIR = f"regression_outputs/{start_date}_c7_m14"
+OUTDIR = f"regression_outputs/{start_date}_c{COLLECTION_WINDOW}_m{MODEL_WINDOW}"
 LOGDIR = f"{OUTDIR}/logs"
 RESULTSDIR = f"{OUTDIR}/results"
-# OUTFILE = f"{OUTDIR}/regressions.p"
 
-extra_params = {"collection_window": 7, "model_window": 14}
+
+X_COLS = [
+    "sentiment_sign",
+    "sentiment_magnitude",
+    "time_in_secs",
+    "num_dayofweek",
+    "activity_ratio",
+    "mean_author_sentiment_sign",
+    "mean_author_sentiment_magnitude",
+    "author_all_activity_count",
+    "domain_pagerank"
+]
+
+extra_params = {"collection_window": COLLECTION_WINDOW, "model_window": MODEL_WINDOW, "x_cols": X_COLS}
 
 
 def run_regression(params_dict):
