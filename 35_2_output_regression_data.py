@@ -5,13 +5,26 @@ from regression_class import RedditRegression as RR
 import logging
 import os
 import gc
+import matplotlib.pyplot as plt
+import matplotlib.colors as mcolors
 
+MAKE_ALL_PLOTS = False
+MAKE_COMMUNAL_PLOTS = True
 
 RESULTS_DIR_PREFIX = "regression_outputs/26_03_2024_"
 RESULTS_DIR_SUFFIX = "/results"
 OUT_DIR_SUFFIX = "/outputs"
 RUN_NAMES = ["c7_m7", "c7_m14", "c14_m7"]
-LOGFILE = "regression_outputs/26_03_2024_processing"
+LOGFILE = "regression_outputs/26_03_2024_communal_processing"
+
+
+OUT_DIR_COMBINED = "regression_outputs/graphs"
+
+
+def find_metrics_for_plotting(result_pickle):
+    param_metrics = result_pickle.regression_params["metrics"]
+    metric_cols = result_pickle.regression_metrics["metrics"].columns
+    return [x for x in param_metrics if x != "mnlogit_aucs"], metric_cols
 
 
 def run_outputs(filepath: str, outdir: str, logger):
@@ -26,15 +39,16 @@ def run_outputs(filepath: str, outdir: str, logger):
         result_pickle.output_to_excel(outpath)
 
         logger.info(f"    Getting metrics")
-        param_metrics = result_pickle.regression_params["metrics"]
-        metric_cols = result_pickle.regression_metrics["metrics"].columns
-        for metric in [x for x in param_metrics if x != "mnlogit_aucs"]:
+
+        metric_list, metric_cols = find_metrics_for_plotting(result_pickle)
+
+        for metric in metric_list:
             logger.info(f"    Plotting {metric}")
             metrics_to_plot = [x for x in metric_cols if metric in x]
             result_pickle.plot_metrics_vs_features(
                 metrics_to_plot,
                 metric,
-                name=f'{filename} {run_type}',
+                name=f"{filename} {run_type}",
                 outfile=f"{outdir}/{filename}_{run_type}_{metric}.png",
                 show=False,
             )
@@ -80,11 +94,80 @@ def set_up_logger():
     return logger
 
 
+def plot_over_all_runs(
+    pickle_dict,
+    metrics_to_plot,
+    ylabel,
+    name="",
+    outfile="",
+    xlabel="Number of features",
+    figsize=(7, 7),
+    legend_loc=(0.9, 0.83),
+):
+    plt_colours = list(mcolors.TABLEAU_COLORS.keys())
+    fig, ax = plt.subplots(1, figsize=figsize)
+    linestyles = ["solid", "dotted", "dashed"]
+
+    i = 0
+    for key in pickle_dict:
+        for j, metric in enumerate(metrics_to_plot):
+            ax.plot(
+                pickle_dict[key].regression_metrics["metrics"].index,
+                pickle_dict[key].regression_metrics["metrics"].loc[:, metric],
+                color=plt_colours[i],
+                linestyle=linestyles[j],
+                label=f"{key} {metric}",
+            )
+        i += 1
+    ax.set_title(f"{name} vs number of features")
+    ax.set_xlabel(xlabel)
+    fig.legend(bbox_to_anchor=legend_loc)
+
+    plt.savefig(outfile)
+    plt.close()
+
+
+def make_common_plots(filepaths, logger):
+    logger.info("Graphing combined plots")
+    if not os.path.isdir(OUT_DIR_COMBINED):
+        os.mkdir(OUT_DIR_COMBINED)
+    logger.info("Getting file names")
+    filenames = set([os.path.basename(x).split(".")[0] for x in filepaths])
+    for x in filenames:
+        logger.info(f"    {x}")
+        to_graph = [y for y in filepaths if x in y]
+        reddit_objs = {}
+        for i, filepath in enumerate(to_graph):
+            run_name = " ".join(os.path.dirname(filepath).split("/")[1].split("_")[-2:])
+            reddit_objs[run_name] = pickle.load(open(filepath, "rb"))
+            if i == 0:
+                metric_list, metric_cols = find_metrics_for_plotting(
+                    reddit_objs[run_name]
+                )
+        for metric in metric_list:
+            logger.info(f"        Plotting {metric}")
+            metrics_to_plot = [x for x in metric_cols if metric in x]
+            plot_over_all_runs(
+                reddit_objs,
+                metrics_to_plot,
+                metric,
+                name=f"{x} {metric}",
+                outfile=f"{OUT_DIR_COMBINED}/{x}_{metric}.png",
+            )
+        logger.info(f"        Done plotting metrics")
+    del filenames
+    del reddit_objs
+    gc.collect()
+    logger.info(f"Finished making common plots - all saved to {OUT_DIR_COMBINED}")
+
+
 if __name__ == "__main__":
 
     logger = set_up_logger()
 
     logger.info("Starting")
+
+    all_filepaths = []
 
     for run_name in RUN_NAMES:
         logger.info(f"# {run_name}")
@@ -93,9 +176,15 @@ if __name__ == "__main__":
         out_dir = RESULTS_DIR_PREFIX + run_name + OUT_DIR_SUFFIX
         if not os.path.isdir(out_dir):
             os.mkdir(out_dir)
+
         filepaths = [f"{results_dir}/{x}" for x in os.listdir(results_dir)]
-        for filename in filepaths:
-            run_outputs(filename, out_dir, logger)
+        all_filepaths += filepaths
+        if MAKE_ALL_PLOTS:
+            for filename in filepaths:
+                run_outputs(filename, out_dir, logger)
         logger.info(f"# {run_name} completed")
+
+    if MAKE_COMMUNAL_PLOTS:
+        make_common_plots(all_filepaths, logger)
 
     logger.info(f"FINISHED")
