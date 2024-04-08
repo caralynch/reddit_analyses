@@ -813,6 +813,8 @@ class RedditRegression(TimestampClass, QuantileClass):
         if len(thread_data_cols) > 1:
             model_data = self.merge_author_and_model_data(model_data, thread_data_cols)
 
+        # TODO DOMAIN INFO SHOULD PROBABLY HAPPEN HERE???
+
         # if there's an author activity threshold, perform thresholding
         if "thresholds" in self.regression_params:
             model_data = self.perform_thresholding(model_data, calval)
