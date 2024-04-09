@@ -1,26 +1,4 @@
-2024-04-09 16:39:47,957 - regression_class_politics_logistic - INFO - Running FSS
-2024-04-09 16:39:50,293 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
-  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
-
-2024-04-09 16:39:50,294 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
-  ret = ret.dtype.type(ret / rcount)
-
-2024-04-09 16:39:50,296 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
-  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
-
-2024-04-09 16:39:50,296 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
-  ret = ret.dtype.type(ret / rcount)
-
-2024-04-09 16:39:50,298 - regression_class_politics_logistic - INFO - Model 1
-2024-04-09 16:39:50,389 - regression_class_politics_logistic - INFO - Model 2
-2024-04-09 16:39:50,539 - regression_class_politics_logistic - INFO - Model 3
-2024-04-09 16:39:50,663 - regression_class_politics_logistic - INFO - Model 4
-2024-04-09 16:39:50,851 - regression_class_politics_logistic - INFO - Model 5
-2024-04-09 16:39:50,976 - regression_class_politics_logistic - INFO - Model 6
-2024-04-09 16:39:51,066 - regression_class_politics_logistic - INFO - Model 7
-2024-04-09 16:39:51,277 - regression_class_politics_logistic - INFO - Model 8
-2024-04-09 16:39:51,469 - regression_class_politics_logistic - INFO - Model 9
-2024-04-09 16:39:51,626 - regression_class_politics_logistic - INFO - Model 10
+2024-04-09 16:43:52,860 - regression_class_politics_linear - INFO - Running FSS
 2024-04-09 16:43:53,026 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
   ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
 
@@ -33,6 +11,16 @@
 2024-04-09 16:43:53,036 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
   ret = ret.dtype.type(ret / rcount)
 
+2024-04-09 16:43:53,038 - regression_class_politics_linear - INFO - Model 1
+2024-04-09 16:43:53,062 - regression_class_politics_linear - INFO - Model 2
+2024-04-09 16:43:53,089 - regression_class_politics_linear - INFO - Model 3
+2024-04-09 16:43:53,111 - regression_class_politics_linear - INFO - Model 4
+2024-04-09 16:43:53,138 - regression_class_politics_linear - INFO - Model 5
+2024-04-09 16:43:53,168 - regression_class_politics_linear - INFO - Model 6
+2024-04-09 16:43:53,216 - regression_class_politics_linear - INFO - Model 7
+2024-04-09 16:43:53,271 - regression_class_politics_linear - INFO - Model 8
+2024-04-09 16:43:53,319 - regression_class_politics_linear - INFO - Model 9
+2024-04-09 16:43:53,378 - regression_class_politics_linear - INFO - Model 10
 2024-04-09 16:48:44,263 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
   ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
 

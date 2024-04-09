@@ -13,3 +13,29 @@
 2024-04-09 16:36:06,216 - __main__ - INFO -        handlers added
 2024-04-09 16:36:06,216 - __main__ - INFO -        creating RR instance
 2024-04-09 16:37:05,078 - __main__ - INFO -        running main
+2024-04-09 16:39:51,991 - __main__ - INFO -   Pickling politics_logistic results
+2024-04-09 16:39:54,918 - __main__ - INFO -   politics_logistic FINISHED
+2024-04-09 16:39:54,918 - __main__ - INFO -        Finished running regression
+2024-04-09 16:39:54,918 - __main__ - INFO -   # linear #
+2024-04-09 16:39:54,918 - __main__ - INFO -        Creating parameter dictionary
+2024-04-09 16:39:54,918 - __main__ - INFO -        Created parameter dictionary
+2024-04-09 16:39:54,918 - __main__ - INFO -        Running regression
+2024-04-09 16:39:54,918 - __main__ - INFO -        handlers added
+2024-04-09 16:39:54,918 - __main__ - INFO -        creating RR instance
+2024-04-09 16:41:00,280 - __main__ - INFO -        running main
+2024-04-09 16:43:53,452 - __main__ - INFO -   Pickling politics_linear results
+2024-04-09 16:43:57,903 - __main__ - INFO -   politics_linear FINISHED
+2024-04-09 16:43:57,903 - __main__ - INFO -        Finished running regression
+2024-04-09 16:43:57,903 - __main__ - INFO -   # mnlogit #
+2024-04-09 16:43:57,903 - __main__ - INFO -        Creating parameter dictionary
+2024-04-09 16:43:57,903 - __main__ - INFO -        Created parameter dictionary
+2024-04-09 16:43:57,903 - __main__ - INFO -        Running regression
+2024-04-09 16:43:57,904 - __main__ - INFO -        handlers added
+2024-04-09 16:43:57,904 - __main__ - INFO -        creating RR instance
+2024-04-09 16:45:13,341 - __main__ - INFO -        running main
+2024-04-09 16:48:54,304 - __main__ - INFO -   Pickling politics_mnlogit results
+2024-04-09 16:48:58,865 - __main__ - INFO -   politics_mnlogit FINISHED
+2024-04-09 16:48:58,866 - __main__ - INFO -        Finished running regression
+2024-04-09 16:48:58,866 - __main__ - INFO -    # Deleting irrelevant data #
+2024-04-09 16:48:58,867 - __main__ - INFO -    # Collecting garbage #
+2024-04-09 16:48:58,932 - __main__ - INFO - FINISHED at 2024-04-09 16:48:58.932878, time taken 0:12:55.859737

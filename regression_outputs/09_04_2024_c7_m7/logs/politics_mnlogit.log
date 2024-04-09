@@ -1,0 +1,23 @@
+2024-04-09 16:48:42,556 - regression_class_politics_mnlogit - INFO - Running FSS
+2024-04-09 16:48:44,263 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+2024-04-09 16:48:44,264 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+2024-04-09 16:48:44,280 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+2024-04-09 16:48:44,281 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+2024-04-09 16:48:44,286 - regression_class_politics_mnlogit - INFO - Model 1
+2024-04-09 16:48:44,696 - regression_class_politics_mnlogit - INFO - Model 2
+2024-04-09 16:48:45,043 - regression_class_politics_mnlogit - INFO - Model 3
+2024-04-09 16:48:45,652 - regression_class_politics_mnlogit - INFO - Model 4
+2024-04-09 16:48:46,408 - regression_class_politics_mnlogit - INFO - Model 5
+2024-04-09 16:48:47,016 - regression_class_politics_mnlogit - INFO - Model 6
+2024-04-09 16:48:47,560 - regression_class_politics_mnlogit - INFO - Model 7
+2024-04-09 16:48:48,593 - regression_class_politics_mnlogit - INFO - Model 8
+2024-04-09 16:48:50,217 - regression_class_politics_mnlogit - INFO - Model 9
+2024-04-09 16:48:52,082 - regression_class_politics_mnlogit - INFO - Model 10
