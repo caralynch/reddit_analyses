@@ -16,3 +16,4 @@ regression_test_outputs/*
 !regression_outputs/*regressions.p
 *.ods
 *metrics_*.p
+!regression_thread_data*.p
