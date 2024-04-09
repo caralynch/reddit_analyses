@@ -22,24 +22,27 @@ from regression_class import RedditRegression as RR
 # PARAMS_DICT_INFILE = f"{OUTDIR}/input_params.p"
 REGRESSION_INFILE = "regression_thread_data_april_2024.p"
 THREAD_INFILE = "clean_5_thread_data.p"
-SUBREDDITS = ["books", "crypto", "conspiracy"]
-#SUBREDDITS = ["politics"]
-# SUBREDDITS = ['conspiracy', 'politics']
-# REGRESSION_TYPES = ["mnlogit"]
 REGRESSION_TYPES = ["logistic", "linear", "mnlogit"]
-if 'politics' in SUBREDDITS:
-    MULTIPROCESS = False
-else:
-    MULTIPROCESS = True
 
-COLLECTION_WINDOW = 7
-MODEL_WINDOW = 7
+
+def get_inputs():
+    if len(sys.argv) < 2:
+        # SUBREDDITS = ["books", "crypto", "conspiracy"]
+        SUBREDDITS = ["politics"]
+        # SUBREDDITS = ['conspiracy', 'politics']
+        # REGRESSION_TYPES = ["mnlogit"]
+
+        COLLECTION_WINDOW = 7
+        MODEL_WINDOW = 7
+    else:
+        COLLECTION_WINDOW = int(sys.argv[1])
+        MODEL_WINDOW = int(sys.argv[2])
+        SUBREDDITS = [x for x in sys.argv[3:]]
+    return COLLECTION_WINDOW, MODEL_WINDOW, SUBREDDITS
+
 
 start_time = dt.now().strftime("%d_%m_%Y__%H_%M_%S")
 start_date = dt.now().strftime("%d_%m_%Y")
-OUTDIR = f"regression_outputs/{start_date}_c{COLLECTION_WINDOW}_m{MODEL_WINDOW}"
-LOGDIR = f"{OUTDIR}/logs"
-RESULTSDIR = f"{OUTDIR}/results"
 
 
 X_COLS = [
@@ -51,10 +54,9 @@ X_COLS = [
     "mean_author_sentiment_sign",
     "mean_author_sentiment_magnitude",
     "author_all_activity_count",
-    "domain_pagerank"
+    "domain_pagerank",
+    "domain_count",
 ]
-
-extra_params = {"collection_window": COLLECTION_WINDOW, "model_window": MODEL_WINDOW, "x_cols": X_COLS}
 
 
 def run_regression(params_dict):
@@ -81,7 +83,7 @@ def run_regression(params_dict):
             logger.info("       creating RR instance")
         else:
             handlers = {"info": sub_f_handler, "warnings": sub_f_handler}
-            
+
         regmod = RR(params_dict, log_handlers=handlers)
 
         if not MULTIPROCESS:
@@ -103,6 +105,24 @@ if __name__ == "__main__":
     # warnings.simplefilter("ignore")
     # warnings.filterwarnings("ignore", category=RuntimeWarning)
     start = dt.now()
+
+    COLLECTION_WINDOW, MODEL_WINDOW, SUBREDDITS = get_inputs()
+
+    if "politics" in SUBREDDITS:
+        MULTIPROCESS = False
+    else:
+        MULTIPROCESS = True
+
+    OUTDIR = f"regression_outputs/{start_date}_c{COLLECTION_WINDOW}_m{MODEL_WINDOW}"
+    LOGDIR = f"{OUTDIR}/logs"
+    RESULTSDIR = f"{OUTDIR}/results"
+
+    extra_params = {
+        "collection_window": COLLECTION_WINDOW,
+        "model_window": MODEL_WINDOW,
+        "x_cols": X_COLS,
+    }
+
     logger = logging.getLogger(__name__)
     logger.setLevel(logging.INFO)
 
