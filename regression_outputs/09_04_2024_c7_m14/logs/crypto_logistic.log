@@ -1,0 +1,23 @@
+2024-04-09 16:11:05,768 - regression_class_crypto_logistic - INFO - Running FSS
+2024-04-09 16:11:07,114 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+2024-04-09 16:11:07,114 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+2024-04-09 16:11:07,117 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+2024-04-09 16:11:07,117 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+2024-04-09 16:11:07,118 - regression_class_crypto_logistic - INFO - Model 1
+2024-04-09 16:11:07,168 - regression_class_crypto_logistic - INFO - Model 2
+2024-04-09 16:11:07,212 - regression_class_crypto_logistic - INFO - Model 3
+2024-04-09 16:11:07,291 - regression_class_crypto_logistic - INFO - Model 4
+2024-04-09 16:11:07,351 - regression_class_crypto_logistic - INFO - Model 5
+2024-04-09 16:11:07,409 - regression_class_crypto_logistic - INFO - Model 6
+2024-04-09 16:11:07,449 - regression_class_crypto_logistic - INFO - Model 7
+2024-04-09 16:11:07,671 - regression_class_crypto_logistic - INFO - Model 8
+2024-04-09 16:11:08,057 - regression_class_crypto_logistic - INFO - Model 9
+2024-04-09 16:11:08,095 - regression_class_crypto_logistic - INFO - Model 10

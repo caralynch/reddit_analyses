@@ -1,0 +1,14 @@
+2024-04-09 16:05:48,948 - __main__ - INFO - Start time 2024-04-09 16:05:48.948328, PID 10721
+2024-04-09 16:05:48,948 - __main__ - INFO - ## Reading in files ##
+2024-04-09 16:05:48,948 - __main__ - INFO -    Regression infile
+2024-04-09 16:05:48,975 - __main__ - INFO -    Thread infile
+2024-04-09 16:05:52,028 - __main__ - INFO - ## Finished reading in files ##
+2024-04-09 16:05:52,029 - __main__ - INFO - ## Deleting irrelevant data ##
+2024-04-09 16:05:52,299 - __main__ - ERROR -   Something went wrong with data deletion.
+Traceback (most recent call last):
+  File "/home/cara/Documents/reddit_analyses/reddit_analyses/35_1_run_regressions.py", line 163, in <module>
+    del thread_df[key]
+KeyboardInterrupt
+2024-04-09 16:05:52,299 - __main__ - INFO - ## Creating parameter dictionaries ##
+2024-04-09 16:05:52,348 - __main__ - INFO - ## Finished creating parameter dictionaries ##
+2024-04-09 16:05:52,348 - __main__ - INFO - ## Starting pool processes ##

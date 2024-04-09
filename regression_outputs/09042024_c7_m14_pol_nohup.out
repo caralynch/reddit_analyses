@@ -1,0 +1,74 @@
+2024-04-09 16:11:44,654 - __main__ - INFO - Start time 2024-04-09 16:11:44.654526, PID 16115
+2024-04-09 16:11:44,654 - __main__ - INFO - ## Reading in files ##
+2024-04-09 16:11:44,654 - __main__ - INFO -    Regression infile
+2024-04-09 16:11:44,677 - __main__ - INFO -    Thread infile
+2024-04-09 16:11:47,606 - __main__ - INFO - ## Finished reading in files ##
+2024-04-09 16:11:47,607 - __main__ - INFO - ## Deleting irrelevant data ##
+2024-04-09 16:11:47,673 - __main__ - INFO - ## Collecting garbage ##
+2024-04-09 16:11:47,717 - __main__ - INFO - ## politics ##
+2024-04-09 16:11:47,717 - __main__ - INFO -   # logistic #
+2024-04-09 16:11:47,717 - __main__ - INFO -        Creating parameter dictionary
+2024-04-09 16:11:47,717 - __main__ - INFO -        Created parameter dictionary
+2024-04-09 16:11:47,717 - __main__ - INFO -        Running regression
+2024-04-09 16:11:47,717 - __main__ - INFO -        handlers added
+2024-04-09 16:11:47,717 - __main__ - INFO -        creating RR instance
+2024-04-09 16:12:46,447 - __main__ - INFO -        running main
+2024-04-09 16:16:32,643 - regression_class_politics_logistic - INFO - Running FSS
+2024-04-09 16:16:34,257 - regression_class_politics_logistic - INFO - Model 1
+2024-04-09 16:16:34,290 - regression_class_politics_logistic - INFO - Model 2
+2024-04-09 16:16:34,384 - regression_class_politics_logistic - INFO - Model 3
+2024-04-09 16:16:34,435 - regression_class_politics_logistic - INFO - Model 4
+2024-04-09 16:16:34,496 - regression_class_politics_logistic - INFO - Model 5
+2024-04-09 16:16:34,589 - regression_class_politics_logistic - INFO - Model 6
+2024-04-09 16:16:34,670 - regression_class_politics_logistic - INFO - Model 7
+2024-04-09 16:16:34,721 - regression_class_politics_logistic - INFO - Model 8
+2024-04-09 16:16:34,808 - regression_class_politics_logistic - INFO - Model 9
+2024-04-09 16:16:34,877 - regression_class_politics_logistic - INFO - Model 10
+2024-04-09 16:16:34,950 - __main__ - INFO -   Pickling politics_logistic results
+2024-04-09 16:16:37,911 - __main__ - INFO -   politics_logistic FINISHED
+2024-04-09 16:16:37,911 - __main__ - INFO -        Finished running regression
+2024-04-09 16:16:37,911 - __main__ - INFO -   # linear #
+2024-04-09 16:16:37,911 - __main__ - INFO -        Creating parameter dictionary
+2024-04-09 16:16:37,912 - __main__ - INFO -        Created parameter dictionary
+2024-04-09 16:16:37,912 - __main__ - INFO -        Running regression
+2024-04-09 16:16:37,912 - __main__ - INFO -        handlers added
+2024-04-09 16:16:37,912 - __main__ - INFO -        creating RR instance
+2024-04-09 16:17:40,895 - __main__ - INFO -        running main
+2024-04-09 16:21:29,339 - regression_class_politics_linear - INFO - Running FSS
+2024-04-09 16:21:29,477 - regression_class_politics_linear - INFO - Model 1
+2024-04-09 16:21:29,492 - regression_class_politics_linear - INFO - Model 2
+2024-04-09 16:21:29,507 - regression_class_politics_linear - INFO - Model 3
+2024-04-09 16:21:29,525 - regression_class_politics_linear - INFO - Model 4
+2024-04-09 16:21:29,546 - regression_class_politics_linear - INFO - Model 5
+2024-04-09 16:21:29,570 - regression_class_politics_linear - INFO - Model 6
+2024-04-09 16:21:29,596 - regression_class_politics_linear - INFO - Model 7
+2024-04-09 16:21:29,624 - regression_class_politics_linear - INFO - Model 8
+2024-04-09 16:21:29,654 - regression_class_politics_linear - INFO - Model 9
+2024-04-09 16:21:29,687 - regression_class_politics_linear - INFO - Model 10
+2024-04-09 16:21:29,723 - __main__ - INFO -   Pickling politics_linear results
+2024-04-09 16:21:32,520 - __main__ - INFO -   politics_linear FINISHED
+2024-04-09 16:21:32,520 - __main__ - INFO -        Finished running regression
+2024-04-09 16:21:32,520 - __main__ - INFO -   # mnlogit #
+2024-04-09 16:21:32,520 - __main__ - INFO -        Creating parameter dictionary
+2024-04-09 16:21:32,520 - __main__ - INFO -        Created parameter dictionary
+2024-04-09 16:21:32,521 - __main__ - INFO -        Running regression
+2024-04-09 16:21:32,521 - __main__ - INFO -        handlers added
+2024-04-09 16:21:32,521 - __main__ - INFO -        creating RR instance
+2024-04-09 16:22:33,680 - __main__ - INFO -        running main
+2024-04-09 16:26:14,451 - regression_class_politics_mnlogit - INFO - Running FSS
+2024-04-09 16:26:15,440 - regression_class_politics_mnlogit - INFO - Model 1
+2024-04-09 16:26:15,602 - regression_class_politics_mnlogit - INFO - Model 2
+2024-04-09 16:26:15,778 - regression_class_politics_mnlogit - INFO - Model 3
+2024-04-09 16:26:15,961 - regression_class_politics_mnlogit - INFO - Model 4
+2024-04-09 16:26:16,138 - regression_class_politics_mnlogit - INFO - Model 5
+2024-04-09 16:26:16,332 - regression_class_politics_mnlogit - INFO - Model 6
+2024-04-09 16:26:16,517 - regression_class_politics_mnlogit - INFO - Model 7
+2024-04-09 16:26:16,705 - regression_class_politics_mnlogit - INFO - Model 8
+2024-04-09 16:26:16,905 - regression_class_politics_mnlogit - INFO - Model 9
+2024-04-09 16:26:17,112 - regression_class_politics_mnlogit - INFO - Model 10
+2024-04-09 16:26:17,348 - __main__ - INFO -   Pickling politics_mnlogit results
+2024-04-09 16:26:20,300 - __main__ - INFO -   politics_mnlogit FINISHED
+2024-04-09 16:26:20,300 - __main__ - INFO -        Finished running regression
+2024-04-09 16:26:20,301 - __main__ - INFO -    # Deleting irrelevant data #
+2024-04-09 16:26:20,301 - __main__ - INFO -    # Collecting garbage #
+2024-04-09 16:26:20,347 - __main__ - INFO - FINISHED at 2024-04-09 16:26:20.347605, time taken 0:14:35.693102

@@ -1,0 +1,8 @@
+2024-04-09 16:02:34,802 - __main__ - INFO - Start time 2024-04-09 16:02:34.802001, PID 8340
+2024-04-09 16:02:34,802 - __main__ - INFO - ## Reading in files ##
+2024-04-09 16:02:34,802 - __main__ - INFO -    Regression infile
+2024-04-09 16:02:34,802 - __main__ - ERROR - Exception occurred during file read in
+Traceback (most recent call last):
+  File "/home/cara/Documents/reddit_analyses/reddit_analyses/35_1_run_regressions.py", line 141, in <module>
+    regression_df = pickle.load(open(REGRESSION_INFILE, "rb"))
+FileNotFoundError: [Errno 2] No such file or directory: 'regression_thread_data_april_2024.p'

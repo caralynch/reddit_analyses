@@ -1,0 +1,35 @@
+2024-04-09 16:24:34,962 - __main__ - INFO - Start time 2024-04-09 16:24:34.962396, PID 26353
+2024-04-09 16:24:34,962 - __main__ - INFO - ## Reading in files ##
+2024-04-09 16:24:34,962 - __main__ - INFO -    Regression infile
+2024-04-09 16:24:34,986 - __main__ - INFO -    Thread infile
+2024-04-09 16:24:38,261 - __main__ - INFO - ## Finished reading in files ##
+2024-04-09 16:24:38,261 - __main__ - INFO - ## Deleting irrelevant data ##
+2024-04-09 16:24:38,328 - __main__ - INFO - ## Collecting garbage ##
+2024-04-09 16:24:38,374 - __main__ - INFO - ## politics ##
+2024-04-09 16:24:38,374 - __main__ - INFO -   # logistic #
+2024-04-09 16:24:38,375 - __main__ - INFO -        Creating parameter dictionary
+2024-04-09 16:24:38,375 - __main__ - INFO -        Created parameter dictionary
+2024-04-09 16:24:38,375 - __main__ - INFO -        Running regression
+2024-04-09 16:24:38,383 - __main__ - INFO -        handlers added
+2024-04-09 16:24:38,383 - __main__ - INFO -        creating RR instance
+2024-04-09 16:25:39,278 - __main__ - INFO -        running main
+2024-04-09 16:28:25,756 - __main__ - INFO -   Pickling politics_logistic results
+2024-04-09 16:28:28,507 - __main__ - INFO -   politics_logistic FINISHED
+2024-04-09 16:28:28,507 - __main__ - INFO -        Finished running regression
+2024-04-09 16:28:28,507 - __main__ - INFO -   # linear #
+2024-04-09 16:28:28,507 - __main__ - INFO -        Creating parameter dictionary
+2024-04-09 16:28:28,507 - __main__ - INFO -        Created parameter dictionary
+2024-04-09 16:28:28,507 - __main__ - INFO -        Running regression
+2024-04-09 16:28:28,515 - __main__ - INFO -        handlers added
+2024-04-09 16:28:28,515 - __main__ - INFO -        creating RR instance
+2024-04-09 16:29:27,131 - __main__ - INFO -        running main
+2024-04-09 16:32:07,282 - __main__ - INFO -   Pickling politics_linear results
+2024-04-09 16:32:09,907 - __main__ - INFO -   politics_linear FINISHED
+2024-04-09 16:32:09,907 - __main__ - INFO -        Finished running regression
+2024-04-09 16:32:09,907 - __main__ - INFO -   # mnlogit #
+2024-04-09 16:32:09,907 - __main__ - INFO -        Creating parameter dictionary
+2024-04-09 16:32:09,907 - __main__ - INFO -        Created parameter dictionary
+2024-04-09 16:32:09,907 - __main__ - INFO -        Running regression
+2024-04-09 16:32:09,907 - __main__ - INFO -        handlers added
+2024-04-09 16:32:09,907 - __main__ - INFO -        creating RR instance
+2024-04-09 16:33:10,038 - __main__ - INFO -        running main

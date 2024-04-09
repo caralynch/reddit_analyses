@@ -1,0 +1,23 @@
+2024-04-09 16:09:46,185 - regression_class_crypto_mnlogit - INFO - Running FSS
+2024-04-09 16:09:46,756 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+2024-04-09 16:09:46,756 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+2024-04-09 16:09:46,759 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+2024-04-09 16:09:46,759 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+2024-04-09 16:09:46,761 - regression_class_crypto_mnlogit - INFO - Model 1
+2024-04-09 16:09:46,906 - regression_class_crypto_mnlogit - INFO - Model 2
+2024-04-09 16:09:47,056 - regression_class_crypto_mnlogit - INFO - Model 3
+2024-04-09 16:09:47,199 - regression_class_crypto_mnlogit - INFO - Model 4
+2024-04-09 16:09:47,628 - regression_class_crypto_mnlogit - INFO - Model 5
+2024-04-09 16:09:48,070 - regression_class_crypto_mnlogit - INFO - Model 6
+2024-04-09 16:09:48,796 - regression_class_crypto_mnlogit - INFO - Model 7
+2024-04-09 16:09:49,877 - regression_class_crypto_mnlogit - INFO - Model 8
+2024-04-09 16:09:51,362 - regression_class_crypto_mnlogit - INFO - Model 9
+2024-04-09 16:09:51,524 - regression_class_crypto_mnlogit - INFO - Model 10

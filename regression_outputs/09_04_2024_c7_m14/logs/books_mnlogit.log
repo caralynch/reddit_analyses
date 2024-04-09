@@ -1,0 +1,23 @@
+2024-04-09 16:10:26,910 - regression_class_books_mnlogit - INFO - Running FSS
+2024-04-09 16:10:27,554 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+2024-04-09 16:10:27,555 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+2024-04-09 16:10:27,558 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:269: RuntimeWarning: Degrees of freedom <= 0 for slice
+  ret = _var(a, axis=axis, dtype=dtype, out=out, ddof=ddof,
+
+2024-04-09 16:10:27,558 - py.warnings - WARNING - /home/cara/anaconda3/envs/redditenv/lib/python3.10/site-packages/numpy/core/_methods.py:261: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+
+2024-04-09 16:10:27,559 - regression_class_books_mnlogit - INFO - Model 1
+2024-04-09 16:10:27,672 - regression_class_books_mnlogit - INFO - Model 2
+2024-04-09 16:10:27,977 - regression_class_books_mnlogit - INFO - Model 3
+2024-04-09 16:10:28,622 - regression_class_books_mnlogit - INFO - Model 4
+2024-04-09 16:10:29,195 - regression_class_books_mnlogit - INFO - Model 5
+2024-04-09 16:10:30,050 - regression_class_books_mnlogit - INFO - Model 6
+2024-04-09 16:10:31,129 - regression_class_books_mnlogit - INFO - Model 7
+2024-04-09 16:10:31,850 - regression_class_books_mnlogit - INFO - Model 8
+2024-04-09 16:10:32,010 - regression_class_books_mnlogit - INFO - Model 9
+2024-04-09 16:10:34,427 - regression_class_books_mnlogit - INFO - Model 10
