@@ -292,7 +292,7 @@ class RedditRegression(TimestampClass, QuantileClass):
 
         # only need certain cols from thread data
         self.thread_data = regression_params["thread_data"][
-            ["thread_id", "id", "timestamp", "author", "sentiment_score"]
+            ["thread_id", "id", "timestamp", "author", "sentiment_score", "domain"]
         ]
 
         del regression_params["thread_data"]
@@ -480,10 +480,18 @@ class RedditRegression(TimestampClass, QuantileClass):
                     self.regression_params[key] = round(
                         new_missing_windows_proportions[i] * days_left
                     )
+        else:
+            # if not missing windows, then can use window size to determine date array size
+            total_window_size = 0
+            for w in windows:
+                total_window_size += self.regression_params[w]
+            # update so that date array only includes required dates for given windows
+            self.date_array = self.date_array[:total_window_size]
 
-    def calc_author_thread_counts(self):
+    def calc_collection_counts(self):
         """Update thread data df with author activity, post and comment counts. These
-        are calculated by looking at the 7 days preceding the day of current activity.
+        are calculated by looking at the collection window preceding the day of current
+        activity.
 
         E.g. If author A has posted 5 times between days 6-10, and the collection window
         is 5 days, then on day 11 the collection window is days 6-10 and the activity
@@ -497,6 +505,15 @@ class RedditRegression(TimestampClass, QuantileClass):
             "activity_ratio",
             "mean_author_sentiment",
         ]
+        # NOTE is creating these regardless of desired x_cols innefficient??
+
+        # establish condition for getting domain data
+        domain_condition = ("domain_count" in self.regression_params["x_cols"]) | (
+            "log_domain_count" in self.regression_params["x_cols"]
+        )
+
+        if domain_condition:
+            new_cols.append("domain_count")
 
         # to avoid warning dating when creating new cols
         pd.options.mode.chained_assignment = None
@@ -528,9 +545,25 @@ class RedditRegression(TimestampClass, QuantileClass):
             ]
 
             # only need to look at collection data for authors that were active today
-            collection_thread_data = collection_thread_data[
-                collection_thread_data.author.isin(day_thread_data.author)
-            ]
+            # if looking at domains, then also need domain counts
+            collection_condition = collection_thread_data.author.isin(
+                day_thread_data.author
+            )
+            if domain_condition:
+                collection_condition = (
+                    collection_condition
+                    | collection_thread_data.domain.isin(day_thread_data.domain)
+                )
+
+            collection_thread_data = collection_thread_data[collection_condition]
+
+            if domain_condition:
+                domain_count = (
+                    collection_thread_data[["id", "domain"]]
+                    .groupby("domain")
+                    .count()
+                    .rename(columns={"id": f"domain_count"})
+                )
 
             # separate by activity
             thread_activity = {
@@ -579,6 +612,14 @@ class RedditRegression(TimestampClass, QuantileClass):
 
             # convert to dict of mapping dicts to add to thread data from day
             author_info_maps = author_info.to_dict()
+            if domain_condition:
+                domain_maps = domain_count.to_dict()["domain_count"]
+                day_thread_data["domain_count"] = day_thread_data.domain.map(
+                    domain_maps
+                ).fillna(0)
+                self.thread_data.loc[
+                    day_thread_data.index, "domain_count"
+                ] = day_thread_data["domain_count"]
 
             # map author info to authors in today's thread data and update thread data
             # with today's author colleciton data
@@ -591,10 +632,10 @@ class RedditRegression(TimestampClass, QuantileClass):
                 ]
 
         # get log of author activity if included
-        col = "log_author_all_activity_count"
-        if col in self.regression_params["x_cols"]:
-            self.thread_data["log_author_all_activity_count"] = np.log(
-                self.thread_data.loc[:, "author_all_activity_count"] + 1
+        cols = ["log_author_all_activity_count", "log_domain_count"]
+        for col in [x for x in cols if x in self.regression_params["x_cols"]]:
+            self.thread_data[col] = np.log(
+                self.thread_data.loc[:, col.removeprefix("log_")] + 1
             )
 
         # separate mean author sentiment into mag and sign
@@ -614,7 +655,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         """
 
         # get thread author data
-        self.calc_author_thread_counts()
+        self.calc_collection_counts()
 
         # get model data
         self.get_regression_model_data()
@@ -666,9 +707,9 @@ class RedditRegression(TimestampClass, QuantileClass):
         self.smf_models = {}
         for mod_key in self.sm_modstrings:
             self.loggers["info"].info(f"Model {mod_key}")
-            self.loggers["info"].debug('    Running regression')
+            self.loggers["info"].debug("    Running regression")
             self.smf_models[mod_key] = self.run_regression(mod_key)
-            self.loggers["info"].debug('    Getting regression metrics')
+            self.loggers["info"].debug("    Getting regression metrics")
             model_results[mod_key] = self.get_regression_metrics(
                 self.smf_models[mod_key], mod_key
             )
@@ -1142,11 +1183,11 @@ class RedditRegression(TimestampClass, QuantileClass):
             ).reset_index(drop=True)
 
         for metric in self.regression_params["metrics"]:
-            self.loggers['info'].debug(f"       Getting {metric}")
+            self.loggers["info"].debug(f"       Getting {metric}")
             if metric in custom_params:
 
                 for calval in y_pred:
-                    self.loggers['info'].debug(f"       Getting {calval}")
+                    self.loggers["info"].debug(f"       Getting {calval}")
 
                     y_true = self.__model_data__[calval][
                         self.regression_params["y_col"]
