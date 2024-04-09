@@ -8,17 +8,18 @@ import gc
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
-MAKE_ALL_PLOTS = False
-MAKE_COMMUNAL_PLOTS = True
+MAKE_ALL_PLOTS = True
+MAKE_COMMUNAL_PLOTS = False
 
-RESULTS_DIR_PREFIX = "regression_outputs/26_03_2024_"
+DATE = "09_04_2024"
+RESULTS_DIR_PREFIX = f"regression_outputs/{DATE}_"
 RESULTS_DIR_SUFFIX = "/results"
 OUT_DIR_SUFFIX = "/outputs"
 RUN_NAMES = ["c7_m7", "c7_m14", "c14_m7"]
-LOGFILE = "regression_outputs/26_03_2024_communal_processing"
+LOGFILE = f"{RESULTS_DIR_PREFIX}_communal_processing"
 
 
-OUT_DIR_COMBINED = "regression_outputs/graphs"
+OUT_DIR_COMBINED = f"regression_outputs/{DATE}_graphs"
 
 
 def find_metrics_for_plotting(result_pickle):

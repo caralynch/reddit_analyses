@@ -1,0 +1,240 @@
+2024-04-09 17:18:57,860 - __main__ - INFO - Logfile: regression_outputs/09_04_2024__communal_processing_0.log
+2024-04-09 17:18:57,860 - __main__ - INFO - Starting
+2024-04-09 17:18:57,860 - __main__ - INFO - # c7_m7
+2024-04-09 17:18:57,860 - __main__ - INFO - Finding filepaths and making output directories
+2024-04-09 17:18:57,860 - __main__ - INFO - regression_outputs/09_04_2024_c7_m7/results/conspiracy_mnlogit.p
+2024-04-09 17:18:57,860 - __main__ - INFO -     Reading in
+2024-04-09 17:18:58,059 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m7/outputs/conspiracy_mnlogit_c7 m7.xlsx
+2024-04-09 17:18:58,161 - __main__ - INFO -     Getting metrics
+2024-04-09 17:18:58,161 - __main__ - INFO -     Plotting mnlogit_accuracy
+2024-04-09 17:18:58,359 - __main__ - INFO -     Plotting mnlogit_mean_auc
+2024-04-09 17:18:58,550 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m7/results/conspiracy_mnlogit.p finished
+2024-04-09 17:18:58,550 - __main__ - INFO - regression_outputs/09_04_2024_c7_m7/results/books_mnlogit.p
+2024-04-09 17:18:58,550 - __main__ - INFO -     Reading in
+2024-04-09 17:18:58,653 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m7/outputs/books_mnlogit_c7 m7.xlsx
+2024-04-09 17:18:58,691 - __main__ - INFO -     Getting metrics
+2024-04-09 17:18:58,691 - __main__ - INFO -     Plotting mnlogit_accuracy
+2024-04-09 17:18:58,795 - __main__ - INFO -     Plotting mnlogit_mean_auc
+2024-04-09 17:18:58,963 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m7/results/books_mnlogit.p finished
+2024-04-09 17:18:58,964 - __main__ - INFO - regression_outputs/09_04_2024_c7_m7/results/politics_mnlogit.p
+2024-04-09 17:18:58,964 - __main__ - INFO -     Reading in
+2024-04-09 17:19:00,305 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m7/outputs/politics_mnlogit_c7 m7.xlsx
+2024-04-09 17:19:00,353 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:00,353 - __main__ - INFO -     Plotting mnlogit_accuracy
+2024-04-09 17:19:00,467 - __main__ - INFO -     Plotting mnlogit_mean_auc
+2024-04-09 17:19:00,795 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m7/results/politics_mnlogit.p finished
+2024-04-09 17:19:00,796 - __main__ - INFO - regression_outputs/09_04_2024_c7_m7/results/conspiracy_logistic.p
+2024-04-09 17:19:00,796 - __main__ - INFO -     Reading in
+2024-04-09 17:19:00,987 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m7/outputs/conspiracy_logistic_c7 m7.xlsx
+2024-04-09 17:19:01,014 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:01,015 - __main__ - INFO -     Plotting auc
+2024-04-09 17:19:01,192 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m7/results/conspiracy_logistic.p finished
+2024-04-09 17:19:01,192 - __main__ - INFO - regression_outputs/09_04_2024_c7_m7/results/politics_linear.p
+2024-04-09 17:19:01,193 - __main__ - INFO -     Reading in
+2024-04-09 17:19:02,354 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m7/outputs/politics_linear_c7 m7.xlsx
+2024-04-09 17:19:02,383 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:02,383 - __main__ - INFO -     Plotting r2
+2024-04-09 17:19:02,700 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m7/results/politics_linear.p finished
+2024-04-09 17:19:02,700 - __main__ - INFO - regression_outputs/09_04_2024_c7_m7/results/books_logistic.p
+2024-04-09 17:19:02,700 - __main__ - INFO -     Reading in
+2024-04-09 17:19:02,788 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m7/outputs/books_logistic_c7 m7.xlsx
+2024-04-09 17:19:02,820 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:02,820 - __main__ - INFO -     Plotting auc
+2024-04-09 17:19:03,015 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m7/results/books_logistic.p finished
+2024-04-09 17:19:03,016 - __main__ - INFO - regression_outputs/09_04_2024_c7_m7/results/crypto_logistic.p
+2024-04-09 17:19:03,016 - __main__ - INFO -     Reading in
+2024-04-09 17:19:03,184 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m7/outputs/crypto_logistic_c7 m7.xlsx
+2024-04-09 17:19:03,209 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:03,209 - __main__ - INFO -     Plotting auc
+2024-04-09 17:19:03,377 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m7/results/crypto_logistic.p finished
+2024-04-09 17:19:03,377 - __main__ - INFO - regression_outputs/09_04_2024_c7_m7/results/books_linear.p
+2024-04-09 17:19:03,377 - __main__ - INFO -     Reading in
+2024-04-09 17:19:03,472 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m7/outputs/books_linear_c7 m7.xlsx
+2024-04-09 17:19:03,519 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:03,519 - __main__ - INFO -     Plotting r2
+2024-04-09 17:19:03,703 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m7/results/books_linear.p finished
+2024-04-09 17:19:03,703 - __main__ - INFO - regression_outputs/09_04_2024_c7_m7/results/crypto_mnlogit.p
+2024-04-09 17:19:03,703 - __main__ - INFO -     Reading in
+2024-04-09 17:19:03,888 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m7/outputs/crypto_mnlogit_c7 m7.xlsx
+2024-04-09 17:19:03,925 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:03,925 - __main__ - INFO -     Plotting mnlogit_accuracy
+2024-04-09 17:19:04,035 - __main__ - INFO -     Plotting mnlogit_mean_auc
+2024-04-09 17:19:04,236 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m7/results/crypto_mnlogit.p finished
+2024-04-09 17:19:04,236 - __main__ - INFO - regression_outputs/09_04_2024_c7_m7/results/crypto_linear.p
+2024-04-09 17:19:04,236 - __main__ - INFO -     Reading in
+2024-04-09 17:19:04,430 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m7/outputs/crypto_linear_c7 m7.xlsx
+2024-04-09 17:19:04,452 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:04,452 - __main__ - INFO -     Plotting r2
+2024-04-09 17:19:04,629 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m7/results/crypto_linear.p finished
+2024-04-09 17:19:04,629 - __main__ - INFO - regression_outputs/09_04_2024_c7_m7/results/politics_logistic.p
+2024-04-09 17:19:04,629 - __main__ - INFO -     Reading in
+2024-04-09 17:19:05,818 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m7/outputs/politics_logistic_c7 m7.xlsx
+2024-04-09 17:19:05,843 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:05,844 - __main__ - INFO -     Plotting auc
+2024-04-09 17:19:06,179 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m7/results/politics_logistic.p finished
+2024-04-09 17:19:06,179 - __main__ - INFO - regression_outputs/09_04_2024_c7_m7/results/conspiracy_linear.p
+2024-04-09 17:19:06,179 - __main__ - INFO -     Reading in
+2024-04-09 17:19:06,336 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m7/outputs/conspiracy_linear_c7 m7.xlsx
+2024-04-09 17:19:06,361 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:06,361 - __main__ - INFO -     Plotting r2
+2024-04-09 17:19:06,543 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m7/results/conspiracy_linear.p finished
+2024-04-09 17:19:06,543 - __main__ - INFO - # c7_m7 completed
+2024-04-09 17:19:06,543 - __main__ - INFO - # c7_m14
+2024-04-09 17:19:06,543 - __main__ - INFO - Finding filepaths and making output directories
+2024-04-09 17:19:06,543 - __main__ - INFO - regression_outputs/09_04_2024_c7_m14/results/conspiracy_mnlogit.p
+2024-04-09 17:19:06,543 - __main__ - INFO -     Reading in
+2024-04-09 17:19:06,703 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m14/outputs/conspiracy_mnlogit_c7 m14.xlsx
+2024-04-09 17:19:06,741 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:06,741 - __main__ - INFO -     Plotting mnlogit_accuracy
+2024-04-09 17:19:06,859 - __main__ - INFO -     Plotting mnlogit_mean_auc
+2024-04-09 17:19:07,030 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m14/results/conspiracy_mnlogit.p finished
+2024-04-09 17:19:07,031 - __main__ - INFO - regression_outputs/09_04_2024_c7_m14/results/books_mnlogit.p
+2024-04-09 17:19:07,031 - __main__ - INFO -     Reading in
+2024-04-09 17:19:07,124 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m14/outputs/books_mnlogit_c7 m14.xlsx
+2024-04-09 17:19:07,163 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:07,163 - __main__ - INFO -     Plotting mnlogit_accuracy
+2024-04-09 17:19:07,292 - __main__ - INFO -     Plotting mnlogit_mean_auc
+2024-04-09 17:19:07,464 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m14/results/books_mnlogit.p finished
+2024-04-09 17:19:07,464 - __main__ - INFO - regression_outputs/09_04_2024_c7_m14/results/politics_mnlogit.p
+2024-04-09 17:19:07,464 - __main__ - INFO -     Reading in
+2024-04-09 17:19:08,604 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m14/outputs/politics_mnlogit_c7 m14.xlsx
+2024-04-09 17:19:08,643 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:08,643 - __main__ - INFO -     Plotting mnlogit_accuracy
+2024-04-09 17:19:08,755 - __main__ - INFO -     Plotting mnlogit_mean_auc
+2024-04-09 17:19:09,078 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m14/results/politics_mnlogit.p finished
+2024-04-09 17:19:09,078 - __main__ - INFO - regression_outputs/09_04_2024_c7_m14/results/conspiracy_logistic.p
+2024-04-09 17:19:09,078 - __main__ - INFO -     Reading in
+2024-04-09 17:19:09,241 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m14/outputs/conspiracy_logistic_c7 m14.xlsx
+2024-04-09 17:19:09,275 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:09,275 - __main__ - INFO -     Plotting auc
+2024-04-09 17:19:09,450 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m14/results/conspiracy_logistic.p finished
+2024-04-09 17:19:09,450 - __main__ - INFO - regression_outputs/09_04_2024_c7_m14/results/politics_linear.p
+2024-04-09 17:19:09,450 - __main__ - INFO -     Reading in
+2024-04-09 17:19:10,597 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m14/outputs/politics_linear_c7 m14.xlsx
+2024-04-09 17:19:10,621 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:10,621 - __main__ - INFO -     Plotting r2
+2024-04-09 17:19:10,953 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m14/results/politics_linear.p finished
+2024-04-09 17:19:10,954 - __main__ - INFO - regression_outputs/09_04_2024_c7_m14/results/books_logistic.p
+2024-04-09 17:19:10,954 - __main__ - INFO -     Reading in
+2024-04-09 17:19:11,046 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m14/outputs/books_logistic_c7 m14.xlsx
+2024-04-09 17:19:11,077 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:11,077 - __main__ - INFO -     Plotting auc
+2024-04-09 17:19:11,245 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m14/results/books_logistic.p finished
+2024-04-09 17:19:11,245 - __main__ - INFO - regression_outputs/09_04_2024_c7_m14/results/crypto_logistic.p
+2024-04-09 17:19:11,245 - __main__ - INFO -     Reading in
+2024-04-09 17:19:11,410 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m14/outputs/crypto_logistic_c7 m14.xlsx
+2024-04-09 17:19:11,437 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:11,437 - __main__ - INFO -     Plotting auc
+2024-04-09 17:19:11,632 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m14/results/crypto_logistic.p finished
+2024-04-09 17:19:11,633 - __main__ - INFO - regression_outputs/09_04_2024_c7_m14/results/books_linear.p
+2024-04-09 17:19:11,633 - __main__ - INFO -     Reading in
+2024-04-09 17:19:11,726 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m14/outputs/books_linear_c7 m14.xlsx
+2024-04-09 17:19:11,758 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:11,758 - __main__ - INFO -     Plotting r2
+2024-04-09 17:19:11,927 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m14/results/books_linear.p finished
+2024-04-09 17:19:11,927 - __main__ - INFO - regression_outputs/09_04_2024_c7_m14/results/crypto_mnlogit.p
+2024-04-09 17:19:11,927 - __main__ - INFO -     Reading in
+2024-04-09 17:19:12,091 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m14/outputs/crypto_mnlogit_c7 m14.xlsx
+2024-04-09 17:19:12,129 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:12,129 - __main__ - INFO -     Plotting mnlogit_accuracy
+2024-04-09 17:19:12,245 - __main__ - INFO -     Plotting mnlogit_mean_auc
+2024-04-09 17:19:12,460 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m14/results/crypto_mnlogit.p finished
+2024-04-09 17:19:12,460 - __main__ - INFO - regression_outputs/09_04_2024_c7_m14/results/crypto_linear.p
+2024-04-09 17:19:12,460 - __main__ - INFO -     Reading in
+2024-04-09 17:19:12,661 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m14/outputs/crypto_linear_c7 m14.xlsx
+2024-04-09 17:19:12,687 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:12,687 - __main__ - INFO -     Plotting r2
+2024-04-09 17:19:12,851 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m14/results/crypto_linear.p finished
+2024-04-09 17:19:12,851 - __main__ - INFO - regression_outputs/09_04_2024_c7_m14/results/politics_logistic.p
+2024-04-09 17:19:12,851 - __main__ - INFO -     Reading in
+2024-04-09 17:19:13,997 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m14/outputs/politics_logistic_c7 m14.xlsx
+2024-04-09 17:19:14,021 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:14,021 - __main__ - INFO -     Plotting auc
+2024-04-09 17:19:14,341 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m14/results/politics_logistic.p finished
+2024-04-09 17:19:14,341 - __main__ - INFO - regression_outputs/09_04_2024_c7_m14/results/conspiracy_linear.p
+2024-04-09 17:19:14,341 - __main__ - INFO -     Reading in
+2024-04-09 17:19:14,495 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c7_m14/outputs/conspiracy_linear_c7 m14.xlsx
+2024-04-09 17:19:14,518 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:14,518 - __main__ - INFO -     Plotting r2
+2024-04-09 17:19:14,710 - __main__ - INFO -     regression_outputs/09_04_2024_c7_m14/results/conspiracy_linear.p finished
+2024-04-09 17:19:14,710 - __main__ - INFO - # c7_m14 completed
+2024-04-09 17:19:14,718 - __main__ - INFO - # c14_m7
+2024-04-09 17:19:14,719 - __main__ - INFO - Finding filepaths and making output directories
+2024-04-09 17:19:14,719 - __main__ - INFO - regression_outputs/09_04_2024_c14_m7/results/conspiracy_mnlogit.p
+2024-04-09 17:19:14,719 - __main__ - INFO -     Reading in
+2024-04-09 17:19:14,892 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c14_m7/outputs/conspiracy_mnlogit_c14 m7.xlsx
+2024-04-09 17:19:14,931 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:14,931 - __main__ - INFO -     Plotting mnlogit_accuracy
+2024-04-09 17:19:15,065 - __main__ - INFO -     Plotting mnlogit_mean_auc
+2024-04-09 17:19:15,283 - __main__ - INFO -     regression_outputs/09_04_2024_c14_m7/results/conspiracy_mnlogit.p finished
+2024-04-09 17:19:15,283 - __main__ - INFO - regression_outputs/09_04_2024_c14_m7/results/books_mnlogit.p
+2024-04-09 17:19:15,283 - __main__ - INFO -     Reading in
+2024-04-09 17:19:15,379 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c14_m7/outputs/books_mnlogit_c14 m7.xlsx
+2024-04-09 17:19:15,417 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:15,418 - __main__ - INFO -     Plotting mnlogit_accuracy
+2024-04-09 17:19:15,528 - __main__ - INFO -     Plotting mnlogit_mean_auc
+2024-04-09 17:19:15,711 - __main__ - INFO -     regression_outputs/09_04_2024_c14_m7/results/books_mnlogit.p finished
+2024-04-09 17:19:15,711 - __main__ - INFO - regression_outputs/09_04_2024_c14_m7/results/politics_mnlogit.p
+2024-04-09 17:19:15,711 - __main__ - INFO -     Reading in
+2024-04-09 17:19:16,860 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c14_m7/outputs/politics_mnlogit_c14 m7.xlsx
+2024-04-09 17:19:16,899 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:16,899 - __main__ - INFO -     Plotting mnlogit_accuracy
+2024-04-09 17:19:17,029 - __main__ - INFO -     Plotting mnlogit_mean_auc
+2024-04-09 17:19:17,362 - __main__ - INFO -     regression_outputs/09_04_2024_c14_m7/results/politics_mnlogit.p finished
+2024-04-09 17:19:17,362 - __main__ - INFO - regression_outputs/09_04_2024_c14_m7/results/conspiracy_logistic.p
+2024-04-09 17:19:17,362 - __main__ - INFO -     Reading in
+2024-04-09 17:19:17,525 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c14_m7/outputs/conspiracy_logistic_c14 m7.xlsx
+2024-04-09 17:19:17,550 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:17,550 - __main__ - INFO -     Plotting auc
+2024-04-09 17:19:17,724 - __main__ - INFO -     regression_outputs/09_04_2024_c14_m7/results/conspiracy_logistic.p finished
+2024-04-09 17:19:17,724 - __main__ - INFO - regression_outputs/09_04_2024_c14_m7/results/politics_linear.p
+2024-04-09 17:19:17,724 - __main__ - INFO -     Reading in
+2024-04-09 17:19:18,881 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c14_m7/outputs/politics_linear_c14 m7.xlsx
+2024-04-09 17:19:18,906 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:18,906 - __main__ - INFO -     Plotting r2
+2024-04-09 17:19:19,228 - __main__ - INFO -     regression_outputs/09_04_2024_c14_m7/results/politics_linear.p finished
+2024-04-09 17:19:19,228 - __main__ - INFO - regression_outputs/09_04_2024_c14_m7/results/books_logistic.p
+2024-04-09 17:19:19,228 - __main__ - INFO -     Reading in
+2024-04-09 17:19:19,320 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c14_m7/outputs/books_logistic_c14 m7.xlsx
+2024-04-09 17:19:19,345 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:19,345 - __main__ - INFO -     Plotting auc
+2024-04-09 17:19:19,511 - __main__ - INFO -     regression_outputs/09_04_2024_c14_m7/results/books_logistic.p finished
+2024-04-09 17:19:19,512 - __main__ - INFO - regression_outputs/09_04_2024_c14_m7/results/crypto_logistic.p
+2024-04-09 17:19:19,512 - __main__ - INFO -     Reading in
+2024-04-09 17:19:19,671 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c14_m7/outputs/crypto_logistic_c14 m7.xlsx
+2024-04-09 17:19:19,694 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:19,694 - __main__ - INFO -     Plotting auc
+2024-04-09 17:19:19,866 - __main__ - INFO -     regression_outputs/09_04_2024_c14_m7/results/crypto_logistic.p finished
+2024-04-09 17:19:19,867 - __main__ - INFO - regression_outputs/09_04_2024_c14_m7/results/books_linear.p
+2024-04-09 17:19:19,867 - __main__ - INFO -     Reading in
+2024-04-09 17:19:19,957 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c14_m7/outputs/books_linear_c14 m7.xlsx
+2024-04-09 17:19:19,978 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:19,978 - __main__ - INFO -     Plotting r2
+2024-04-09 17:19:20,160 - __main__ - INFO -     regression_outputs/09_04_2024_c14_m7/results/books_linear.p finished
+2024-04-09 17:19:20,160 - __main__ - INFO - regression_outputs/09_04_2024_c14_m7/results/crypto_mnlogit.p
+2024-04-09 17:19:20,160 - __main__ - INFO -     Reading in
+2024-04-09 17:19:20,323 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c14_m7/outputs/crypto_mnlogit_c14 m7.xlsx
+2024-04-09 17:19:20,369 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:20,369 - __main__ - INFO -     Plotting mnlogit_accuracy
+2024-04-09 17:19:20,478 - __main__ - INFO -     Plotting mnlogit_mean_auc
+2024-04-09 17:19:20,687 - __main__ - INFO -     regression_outputs/09_04_2024_c14_m7/results/crypto_mnlogit.p finished
+2024-04-09 17:19:20,687 - __main__ - INFO - regression_outputs/09_04_2024_c14_m7/results/crypto_linear.p
+2024-04-09 17:19:20,688 - __main__ - INFO -     Reading in
+2024-04-09 17:19:20,847 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c14_m7/outputs/crypto_linear_c14 m7.xlsx
+2024-04-09 17:19:20,872 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:20,872 - __main__ - INFO -     Plotting r2
+2024-04-09 17:19:21,045 - __main__ - INFO -     regression_outputs/09_04_2024_c14_m7/results/crypto_linear.p finished
+2024-04-09 17:19:21,046 - __main__ - INFO - regression_outputs/09_04_2024_c14_m7/results/politics_logistic.p
+2024-04-09 17:19:21,046 - __main__ - INFO -     Reading in
+2024-04-09 17:19:22,261 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c14_m7/outputs/politics_logistic_c14 m7.xlsx
+2024-04-09 17:19:22,289 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:22,290 - __main__ - INFO -     Plotting auc
+2024-04-09 17:19:22,649 - __main__ - INFO -     regression_outputs/09_04_2024_c14_m7/results/politics_logistic.p finished
+2024-04-09 17:19:22,650 - __main__ - INFO - regression_outputs/09_04_2024_c14_m7/results/conspiracy_linear.p
+2024-04-09 17:19:22,650 - __main__ - INFO -     Reading in
+2024-04-09 17:19:22,806 - __main__ - INFO -     Outputting results to regression_outputs/09_04_2024_c14_m7/outputs/conspiracy_linear_c14 m7.xlsx
+2024-04-09 17:19:22,834 - __main__ - INFO -     Getting metrics
+2024-04-09 17:19:22,834 - __main__ - INFO -     Plotting r2
+2024-04-09 17:19:23,036 - __main__ - INFO -     regression_outputs/09_04_2024_c14_m7/results/conspiracy_linear.p finished
+2024-04-09 17:19:23,036 - __main__ - INFO - # c14_m7 completed
+2024-04-09 17:19:23,036 - __main__ - INFO - FINISHED
