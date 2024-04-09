@@ -2,8 +2,10 @@
 /872a7a2986dad903832622afd5519b99fafd319dd9f90d10_activity_r_books.csv
 /top_author_notes.csv
 *.p
+*.png
 !weekly_FSS_metrics.p
 *.zip
+*.xlsx
 /neutral_sentiment_activities/*
 !/feature_selection_*
 !*regression_data.p
@@ -12,3 +14,5 @@
 !test*.p
 regression_test_outputs/*
 !regression_outputs/*regressions.p
+*.ods
+*metrics_*.p
