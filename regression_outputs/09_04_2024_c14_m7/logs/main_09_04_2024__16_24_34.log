@@ -33,3 +33,9 @@
 2024-04-09 16:32:09,907 - __main__ - INFO -        handlers added
 2024-04-09 16:32:09,907 - __main__ - INFO -        creating RR instance
 2024-04-09 16:33:10,038 - __main__ - INFO -        running main
+2024-04-09 16:35:58,453 - __main__ - INFO -   Pickling politics_mnlogit results
+2024-04-09 16:36:01,138 - __main__ - INFO -   politics_mnlogit FINISHED
+2024-04-09 16:36:01,139 - __main__ - INFO -        Finished running regression
+2024-04-09 16:36:01,139 - __main__ - INFO -    # Deleting irrelevant data #
+2024-04-09 16:36:01,139 - __main__ - INFO -    # Collecting garbage #
+2024-04-09 16:36:01,184 - __main__ - INFO - FINISHED at 2024-04-09 16:36:01.184803, time taken 0:11:26.222427

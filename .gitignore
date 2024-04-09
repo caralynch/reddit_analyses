@@ -17,3 +17,12 @@ regression_test_outputs/*
 *.ods
 *metrics_*.p
 !regression_thread_data*.p
+regression_outputs/archived
+regression_outputs/linear
+regression_outputs/logistic
+regression_outputs/mnlogit
+!regression_outputs/graphs
+!regression_outputs/*/logs
+!regression_outputs/*/results
+!!regression_outputs/*nohup.out
+!regression_outputs/*/outputs
