@@ -1,0 +1,55 @@
+2024-04-12 18:35:21,465 - __main__ - INFO - Logfile: regression_outputs/09_04_2024__communal_processing_1.log
+2024-04-12 18:35:21,465 - __main__ - INFO - Starting
+2024-04-12 18:35:21,465 - __main__ - INFO - # c7_m7
+2024-04-12 18:35:21,465 - __main__ - INFO - Finding filepaths and making output directories
+2024-04-12 18:35:21,465 - __main__ - INFO - # c7_m7 completed
+2024-04-12 18:35:21,466 - __main__ - INFO - # c7_m14
+2024-04-12 18:35:21,466 - __main__ - INFO - Finding filepaths and making output directories
+2024-04-12 18:35:21,466 - __main__ - INFO - # c7_m14 completed
+2024-04-12 18:35:21,466 - __main__ - INFO - # c14_m7
+2024-04-12 18:35:21,466 - __main__ - INFO - Finding filepaths and making output directories
+2024-04-12 18:35:21,466 - __main__ - INFO - # c14_m7 completed
+2024-04-12 18:35:21,466 - __main__ - INFO - Graphing combined plots
+2024-04-12 18:35:21,466 - __main__ - INFO - Getting file names
+2024-04-12 18:35:21,466 - __main__ - INFO -     crypto_mnlogit
+2024-04-12 18:35:22,084 - __main__ - INFO -         Plotting mnlogit_accuracy
+2024-04-12 18:35:22,388 - __main__ - INFO -         Plotting mnlogit_mean_auc
+2024-04-12 18:35:22,530 - __main__ - INFO -         Done plotting metrics
+2024-04-12 18:35:22,531 - __main__ - INFO -     conspiracy_logistic
+2024-04-12 18:35:23,110 - __main__ - INFO -         Plotting auc
+2024-04-12 18:35:23,238 - __main__ - INFO -         Done plotting metrics
+2024-04-12 18:35:23,238 - __main__ - INFO -     politics_mnlogit
+2024-04-12 18:35:27,598 - __main__ - INFO -         Plotting mnlogit_accuracy
+2024-04-12 18:35:27,757 - __main__ - INFO -         Plotting mnlogit_mean_auc
+2024-04-12 18:35:27,897 - __main__ - INFO -         Done plotting metrics
+2024-04-12 18:35:27,898 - __main__ - INFO -     conspiracy_linear
+2024-04-12 18:35:29,040 - __main__ - INFO -         Plotting r2
+2024-04-12 18:35:29,235 - __main__ - INFO -         Done plotting metrics
+2024-04-12 18:35:29,235 - __main__ - INFO -     politics_linear
+2024-04-12 18:35:34,013 - __main__ - INFO -         Plotting r2
+2024-04-12 18:35:34,166 - __main__ - INFO -         Done plotting metrics
+2024-04-12 18:35:34,166 - __main__ - INFO -     books_logistic
+2024-04-12 18:35:35,003 - __main__ - INFO -         Plotting auc
+2024-04-12 18:35:35,158 - __main__ - INFO -         Done plotting metrics
+2024-04-12 18:35:35,158 - __main__ - INFO -     crypto_logistic
+2024-04-12 18:35:35,856 - __main__ - INFO -         Plotting auc
+2024-04-12 18:35:36,030 - __main__ - INFO -         Done plotting metrics
+2024-04-12 18:35:36,030 - __main__ - INFO -     crypto_linear
+2024-04-12 18:35:36,700 - __main__ - INFO -         Plotting r2
+2024-04-12 18:35:36,859 - __main__ - INFO -         Done plotting metrics
+2024-04-12 18:35:36,859 - __main__ - INFO -     conspiracy_mnlogit
+2024-04-12 18:35:37,491 - __main__ - INFO -         Plotting mnlogit_accuracy
+2024-04-12 18:35:37,639 - __main__ - INFO -         Plotting mnlogit_mean_auc
+2024-04-12 18:35:37,780 - __main__ - INFO -         Done plotting metrics
+2024-04-12 18:35:37,780 - __main__ - INFO -     books_linear
+2024-04-12 18:35:38,101 - __main__ - INFO -         Plotting r2
+2024-04-12 18:35:38,290 - __main__ - INFO -         Done plotting metrics
+2024-04-12 18:35:38,290 - __main__ - INFO -     books_mnlogit
+2024-04-12 18:35:38,604 - __main__ - INFO -         Plotting mnlogit_accuracy
+2024-04-12 18:35:38,760 - __main__ - INFO -         Plotting mnlogit_mean_auc
+2024-04-12 18:35:38,918 - __main__ - INFO -         Done plotting metrics
+2024-04-12 18:35:38,918 - __main__ - INFO -     politics_logistic
+2024-04-12 18:35:43,101 - __main__ - INFO -         Plotting auc
+2024-04-12 18:35:43,236 - __main__ - INFO -         Done plotting metrics
+2024-04-12 18:35:43,757 - __main__ - INFO - Finished making common plots - all saved to regression_outputs/09_04_2024_graphs
+2024-04-12 18:35:43,757 - __main__ - INFO - FINISHED
