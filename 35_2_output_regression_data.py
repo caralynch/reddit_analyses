@@ -8,8 +8,8 @@ import gc
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
-MAKE_ALL_PLOTS = True
-MAKE_COMMUNAL_PLOTS = False
+MAKE_ALL_PLOTS = False
+MAKE_COMMUNAL_PLOTS = True
 
 DATE = "09_04_2024"
 RESULTS_DIR_PREFIX = f"regression_outputs/{DATE}_"
@@ -173,14 +173,15 @@ if __name__ == "__main__":
     for run_name in RUN_NAMES:
         logger.info(f"# {run_name}")
         logger.info("Finding filepaths and making output directories")
+        
         results_dir = RESULTS_DIR_PREFIX + run_name + RESULTS_DIR_SUFFIX
-        out_dir = RESULTS_DIR_PREFIX + run_name + OUT_DIR_SUFFIX
-        if not os.path.isdir(out_dir):
-            os.mkdir(out_dir)
 
         filepaths = [f"{results_dir}/{x}" for x in os.listdir(results_dir)]
         all_filepaths += filepaths
         if MAKE_ALL_PLOTS:
+            out_dir = RESULTS_DIR_PREFIX + run_name + OUT_DIR_SUFFIX
+            if not os.path.isdir(out_dir):
+                os.mkdir(out_dir)
             for filename in filepaths:
                 run_outputs(filename, out_dir, logger)
         logger.info(f"# {run_name} completed")
