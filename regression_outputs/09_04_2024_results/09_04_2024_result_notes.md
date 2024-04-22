@@ -93,6 +93,14 @@ The thread suze threshold is 2 for the linear and multinomial logistic regressio
 
 # 3. Results
 
+TODO:
+- linear regressions: for cryptocurrency, look at features selected
+- logistic regressions:
+    - communal graphs as for linear
+    - individual graphs
+    - look at selected features - make xlsx to combine??
+- mnlogit regressions
+
 ## 3.1. Linear regressions
 
 In this case calibration and validation $r^2$ vs number of features are shown.
