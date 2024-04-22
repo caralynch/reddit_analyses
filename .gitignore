@@ -16,7 +16,6 @@ regression_test_outputs/*
 !regression_outputs/*regressions.p
 *.ods
 *metrics_*.p
-!regression_thread_data*.p
 /5fe11acea1ba780086614f6b6f5a36a449cc0902eb0306d1_rbooks_activity.csv
 /872a7a2986dad903832622afd5519b99fafd319dd9f90d10_activity_r_books.csv
 /top_author_notes.csv
@@ -32,7 +31,6 @@ regression_test_outputs/*
 !plotting_metrics.p
 !test*.p
 regression_test_outputs/*
-!regression_outputs/*regressions.p
 *.ods
 *metrics_*.p
 !regression_thread_data*.p
@@ -40,8 +38,10 @@ regression_outputs/archived*
 regression_outputs/linear*
 regression_outputs/logistic*
 regression_outputs/mnlogit*
-!regression_outputs/graphs/*
-!regression_outputs/*nohup.out
+!regression_outputs/results/*
 !regression_outputs/*/outputs/*
 !*output_regression_data.py
 *regression_thread_data*.p
+*.out
+*.log
+regression_outputs/*
