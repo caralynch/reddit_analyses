@@ -60,6 +60,35 @@ In all cases, the validation period was 7 days.
 
 ## 2.3. Dataset sizes
 
+See `09042024_data_sizes.xlsx` for full table, otherwise number of calibration and validation period threads shown in below table.
+
+| subreddit  | model window | collection window | thread size threshold | calibration threads | validation threads |
+|------------|--------------|-------------------|-----------------------|---------------------|--------------------|
+| books      | 7            | 7                 | 0                     | 144                 | 136                |
+| books      | 7            | 7                 | 2                     | 42                  | 60                 |
+| books      | 7            | 14                | 0                     | 179                 | 142                |
+| books      | 7            | 14                | 2                     | 85                  | 56                 |
+| books      | 14           | 7                 | 0                     | 280                 | 104                |
+| books      | 14           | 7                 | 2                     | 102                 | 46                 |
+| conspiracy | 7            | 7                 | 0                     | 1626                | 1612               |
+| conspiracy | 7            | 7                 | 2                     | 1462                | 1429               |
+| conspiracy | 7            | 14                | 0                     | 1763                | 1733               |
+| conspiracy | 7            | 14                | 2                     | 1560                | 1583               |
+| conspiracy | 14           | 7                 | 0                     | 3238                | 1567               |
+| conspiracy | 14           | 7                 | 2                     | 2891                | 1443               |
+| crypto     | 7            | 7                 | 0                     | 1843                | 1680               |
+| crypto     | 7            | 7                 | 2                     | 1312                | 1180               |
+| crypto     | 7            | 14                | 0                     | 1805                | 1826               |
+| crypto     | 7            | 14                | 2                     | 1231                | 1260               |
+| crypto     | 14           | 7                 | 0                     | 3523                | 1699               |
+| crypto     | 14           | 7                 | 2                     | 2492                | 1203               |
+| politics   | 7            | 7                 | 0                     | 6042                | 4481               |
+| politics   | 7            | 7                 | 2                     | 4784                | 3585               |
+| politics   | 7            | 14                | 0                     | 4836                | 5540               |
+| politics   | 7            | 14                | 2                     | 3816                | 4295               |
+| politics   | 14           | 7                 | 0                     | 10523               | 5118               |
+| politics   | 14           | 7                 | 2                     | 8369                | 4012               |
+
 # Graphs over the different collection and model periods
 ## 1.1. Linear regressions
 
