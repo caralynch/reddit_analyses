@@ -89,7 +89,7 @@ See `09042024_data_sizes.xlsx` for full table, otherwise number of calibration a
 | politics   | 14           | 7                 | 0                     | 10523               | 5118               |
 | politics   | 14           | 7                 | 2                     | 8369                | 4012               |
 
-The thread suze threshold is 2 for the linear and multinomial logistic regressions, and 0 for the logistic regressions. From the above, too many threads are removed via thresholding from r/Books. This is almost entirely due to author thresholding - too many users are not active enough in this subreddit (68% of authors on this subreddit are only active once in the dataset). The results for r/Books are therefore not considered below due to the sparsity of modelled data.
+The thread size threshold is 2 for the linear and multinomial logistic regressions, and 0 for the logistic regressions. From the above, too many threads are removed via thresholding from r/Books. This is almost entirely due to author thresholding - too many users are not active enough in this subreddit (68% of authors on this subreddit are only active once in the dataset). The results for r/Books are therefore not considered below due to the sparsity of modelled data.
 
 # 3. Results
 
@@ -113,7 +113,7 @@ The linear regressions perform poorly across all collection and model periods co
 
 ### 3.1.2. Cryptocurrency
 
-The $r^2$ values are low for all model periods considered, however calibration and validation $r^2$s are similar, and increase with additional features. The most significant $r^2$ increases occur in the 1-4 feature range.
+The $r^2$ values are low for all model periods considered, however calibration and validation $r^2$ are similar, and increase with additional features. The most significant $r^2$ increases occur in the 1-4 feature range.
 
 ![crypto-linear](crypto_linear_r2.png)
 
