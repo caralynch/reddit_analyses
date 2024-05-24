@@ -39,3 +39,8 @@ regression_outputs/09_04_2024__communal_processing.log
 regression_outputs/09042024_c7_m7_pol_nohup.out
 regression_outputs/09042024_c7_m14_nohup.out
 regression_outputs/09042024_c7_m14_nohup.out
+regression_test_outputs/test_books.p
+regression_test_outputs/test_conspiracy.p
+regression_test_outputs/test_politics.p
+regression_test_outputs/test_crypto.p
+regression_test_outputs/test1.p
