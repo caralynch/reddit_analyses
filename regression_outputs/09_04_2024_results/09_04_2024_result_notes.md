@@ -3,7 +3,11 @@
 ## 1.1. Multinomial logistic regression
 
 Implemented such that in sequential forward selection, the performance metric used is accuracy, defined as
-$$\frac{\text{number of correctly classified samples}}{\text{all samples}}$$
+
+
+$\frac{\text{number of correctly classified samples}}{\text{all samples}}$
+
+
 although this is flexible.
 
 
