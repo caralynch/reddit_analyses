@@ -1735,13 +1735,13 @@ class RedditRegression(TimestampClass, QuantileClass):
             },
             "linear": {
                 "regression_type": "linear",
-                "y_col": "thread_size",
+                "y_col": "log_thread_size",
                 "metrics": ["r2"],
                 "thresholds": THRESHOLDS_SUCCESSFUL,
             },
             "mnlogit": {
                 "regression_type": "mnlogit",
-                "y_col": "thread_size",
+                "y_col": "log_thread_size",
                 "metrics": ["mnlogit_accuracy", "mnlogit_aucs", "mnlogit_mean_auc"],
                 "thresholds": THRESHOLDS_SUCCESSFUL,
                 "quantiles": QUANTILES,
@@ -1749,6 +1749,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         }
 
         FIXED_PARAMS.update(PARAMS_BY_TYPE[regression_type])
+
         regression_params = {
             "name": subreddit,
             "regression_data": regression_df,
@@ -1758,5 +1759,25 @@ class RedditRegression(TimestampClass, QuantileClass):
         params_to_add = [x for x in FIXED_PARAMS if x not in kwargs]
         for key in params_to_add:
             regression_params[key] = FIXED_PARAMS[key]
+        
+        # check y col is in reg dfs
+        if regression_params['y_col'] not in regression_df:
+            y_col = regression_params['y_col']
+            if y_col.startswith('log'):
+                original_col = y_col.lstrip('log_')
+                if original_col in regression_df:
+                    # if original column has value higher than 1, can take normal log
+                    if regression_df[original_col].min() > 0:
+                        regression_df[y_col] = np.log(regression_df[original_col])
+                    elif regression_df[original_col].min() == 0:
+                        regression_df[y_col] = np.log(regression_df[original_col]+1)
+                        print('Taking log(y+1)')
+                    else:
+                        raise Exception('No log of negative numbers: issue with y column')
+                    regression_params['regression_data'] = regression_df
+                else:
+                    raise Exception('No y column found: nothing to take log of')
+            else:
+                raise Exception('No y column found')
 
         return regression_params
