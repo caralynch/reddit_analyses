@@ -22,8 +22,8 @@ from regression_class import RedditRegression as RR
 # PARAMS_DICT_INFILE = f"{OUTDIR}/input_params.p"
 REGRESSION_INFILE = "regression_thread_data_april_2024.p"
 THREAD_INFILE = "clean_5_thread_data.p"
-REGRESSION_TYPES = ["logistic", "linear", "mnlogit"]
-
+REGRESSION_TYPES = ["linear", "mnlogit"]
+POSSIBLE_SUBREDDITS = ['books', 'crypto', 'conspiracy', 'politics']
 
 def get_inputs():
     if len(sys.argv) < 2:
@@ -32,12 +32,13 @@ def get_inputs():
         # SUBREDDITS = ['conspiracy', 'politics']
         # REGRESSION_TYPES = ["mnlogit"]
 
-        COLLECTION_WINDOW = 7
+        COLLECTION_WINDOW = 14
         MODEL_WINDOW = 7
     else:
         COLLECTION_WINDOW = int(sys.argv[1])
         MODEL_WINDOW = int(sys.argv[2])
-        SUBREDDITS = [x for x in sys.argv[3:]]
+        SUBREDDITS = [x for x in sys.argv[3:] if x in POSSIBLE_SUBREDDITS]
+
     return COLLECTION_WINDOW, MODEL_WINDOW, SUBREDDITS
 
 

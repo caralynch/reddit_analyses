@@ -11,11 +11,11 @@ import matplotlib.colors as mcolors
 MAKE_ALL_PLOTS = False
 MAKE_COMMUNAL_PLOTS = True
 
-DATE = "09_04_2024"
+DATE = "22_07_2024"
 RESULTS_DIR_PREFIX = f"regression_outputs/{DATE}_"
 RESULTS_DIR_SUFFIX = "/results"
 OUT_DIR_SUFFIX = "/outputs"
-RUN_NAMES = ["c7_m7", "c7_m14", "c14_m7"]
+RUN_NAMES = ["c14_m7"]
 LOGFILE = f"{RESULTS_DIR_PREFIX}_communal_processing"
 
 

@@ -1712,8 +1712,8 @@ class RedditRegression(TimestampClass, QuantileClass):
         ]
 
         FIXED_PARAMS = {
-            "collection_window": 7,
-            "model_window": 14,
+            "collection_window": 14,
+            "model_window": 7,
             "validation_window": 7,
             "FSS": True,
             "x_cols": X_COLS,
