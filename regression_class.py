@@ -236,6 +236,20 @@ class RedditRegression(TimestampClass, QuantileClass):
         "mnlogit": "thread_size",
     }
 
+    ## PRETTY FEATURE NAMES
+    FEATURE_NAME_LOOKUP = {
+    'domain_count': 'Post domain count',
+    'author_all_activity_count': 'Author activity count',
+    'mean_author_sentiment_magnitude': 'Author mean sentiment magnitude',
+    'mean_author_sentiment_sign': 'Author mean sentiment sign',
+    'domain_pagerank': 'Post domain PageRank',
+    'activity_ratio': 'Author activity ratio',
+    'time_in_secs': 'Time of day',
+    'sentiment_sign': 'Post sentiment sign',
+    'sentiment_magnitude': 'Post sentiment magnitude',
+    'num_dayofweek': 'Day of week'
+}
+
     ## INITIALISE CLASS
     def __init__(self, regression_params: dict, log_handlers=None):
         """Initialise regression data class
@@ -1281,6 +1295,26 @@ class RedditRegression(TimestampClass, QuantileClass):
             features[i] = list(feature_tuple)
             i += 1
         return features
+    
+    def get_feature_names_from_FSS(self):
+        """Makes list of all features selected via FSS, in order.
+
+        Returns
+        -------
+        list
+            List of features
+        """
+        feature_list = []
+
+        for i, feat_tuple in enumerate(self.FSS_metrics["metric_df"].feature_names):
+            if i==0:
+                feature_list.append(feat_tuple[0])
+            else:
+                new_feature = [x for x in feat_tuple if x not in feature_list]
+                feature_list += new_feature
+        
+        return feature_list
+
 
     def get_num_threads_modelled(self):
         """Creates df with number of threads modelled and removed.
