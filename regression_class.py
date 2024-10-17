@@ -1526,8 +1526,9 @@ class RedditRegression(TimestampClass, QuantileClass):
 
     @staticmethod
     def get_x_vals_from_modstring(modstring):
-        return [x.strip() for x in modstring.split("~")[1].split("+")]
-
+        x_vals = [x.strip() for x in modstring.split("~")[1].split("+")]
+        x_vals = [x[2:-1] if x.startswith('C(') and x.endswith(')') else x for x in x_vals]
+        return x_vals
     @staticmethod
     def get_y_from_modstring(modstring):
         return modstring.split("~")[0].strip()
