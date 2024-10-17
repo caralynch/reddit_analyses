@@ -804,10 +804,14 @@ class RedditRegression(TimestampClass, QuantileClass):
         self.scale_metrics_dict = {}
         self.scaled_data = {}
         for calval in self.model_data:
+            # can only scale numeric data
             x_data = self.model_data[calval][self.regression_params["x_cols"]]
-            scaled_x_data, self.scale_metrics_dict[calval] = self.scale_data(x_data)
+            numerical_x_data = x_data.select_dtypes(include=np.number)
+            scaled_x_data, self.scale_metrics_dict[calval] = self.scale_data(numerical_x_data)
+            # non numerical data
+            non_numerical_x_data = x_data.select_dtypes(exclude=np.number)
             y_data = self.model_data[calval][[self.regression_params["y_col"]]]
-            self.scaled_data[calval] = pd.concat((y_data, scaled_x_data), axis=1)
+            self.scaled_data[calval] = pd.concat((y_data, scaled_x_data, non_numerical_x_data), axis=1)
         self.__model_data__ = self.scaled_data
 
     @staticmethod
