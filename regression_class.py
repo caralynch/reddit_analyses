@@ -746,7 +746,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         param_dict = {}
         self.smf_models = {}
         for mod_key in self.sm_modstrings:
-            self.loggers["info"].info(f"Model {mod_key}")
+            self.loggers["info"].info(f"Model {mod_key}: {self.sm_modstrings[mod_key]}")
             self.loggers["info"].debug("    Running regression")
             self.smf_models[mod_key] = self.run_regression(mod_key)
             self.loggers["info"].debug("    Getting regression metrics")
@@ -1110,8 +1110,9 @@ class RedditRegression(TimestampClass, QuantileClass):
             kwargs for fit function.
         """
         lookup_dict = {"method": "bfgs", "maxiter": 100}
-        maxiter_limit = 1000
+        maxiter_limit = 1500
         run_again = False
+        methods_list = ['bfgs', "cg", "nm", "newton", "lbfgs", "powell", "ncg", "basinhopping"]
         with warnings.catch_warnings(record=True) as w:
             try:
                 fit_function(disp=0, **kwargs)
@@ -1140,20 +1141,29 @@ class RedditRegression(TimestampClass, QuantileClass):
                     key = "maxiter"
                     if kwargs[key] < maxiter_limit:
                         run_again = True
-                        kwargs[key] += 50
+                        #kwargs[key] += 50
+                        kwargs[key] = maxiter_limit
 
                 elif w_i.category == sme.HessianInversionWarning:
-                    if "method" not in kwargs or kwargs["method"] != "bfgs":
+                    if "maxiter" in kwargs and kwargs["maxiter"] < maxiter_limit:
+                        print("Changing maxiter")
+                        kwargs["maxiter"] += 50
+                        run_again = True
+                    elif "maxiter" not in kwargs:
+                        kwargs["maxiter"] = lookup_dict["maxiter"]
+                        run_again = True
+                    elif "method" not in kwargs:
                         kwargs["method"] = "bfgs"
-                    elif kwargs["method"] == "bfgs":
-                        kwargs["method"] = "cg"
-                    else:
-                        if "maxiter" in kwargs and kwargs["maxiter"] < maxiter_limit:
-                            kwargs["maxiter"] += 50
-                            run_again = True
-                        elif "maxiter" not in kwargs:
-                            kwargs["maxiter"] = lookup_dict["maxiter"]
-                            run_again = True
+                        run_again = True
+                    elif kwargs["method"] in methods_list:
+                        method_i = methods_list.index(kwargs["method"])
+                        if method_i < len(methods_list) - 1:
+                            kwargs["method"] = methods_list[method_i + 1]
+                            print(f"Using {kwargs['method']}")
+                            run_again=True
+                        else:
+                            print("No more solvers!")
+                            run_again=False
 
                     return run_again, kwargs
 
@@ -1179,7 +1189,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         """
         run_again = True
         run_counter = 0
-        max_runs = 10
+        max_runs = 500
         kwargs_dict = {}
         while run_again == True and run_counter < max_runs:
             run_again, kwargs_dict = cls.manage_convergence_warnings(
