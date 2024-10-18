@@ -1,6 +1,7 @@
 # data types
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_numeric_dtype
 
 # for warnings, errors and exceptions management
 import warnings
@@ -66,6 +67,26 @@ class TimestampClass:
     @staticmethod
     def get_hour(timestamp):
         return timestamp.hour
+    
+    @staticmethod
+    def get_weekend_or_weekday(timestamp):
+        weekday = timestamp.dayofweek
+        if weekday < 5:
+            return "Weekday"
+        else:
+            return "Weekend"
+    
+    @staticmethod
+    def get_time_of_day(timestamp):
+        h = timestamp.hour
+        if 4 <= h <= 11:
+            return "Morning"
+        elif 12 <= h <= 19:
+            return "Afternoon"
+        else:
+            return "Night"
+        
+
 
 
 class QuantileClass:
@@ -211,12 +232,15 @@ class QuantileClass:
 
 
 class RedditRegression(TimestampClass, QuantileClass):
-
+    
+    
     ## CLASS LOOKUPS
     COLUMN_FUNCTIONS = {
         "time_in_secs": TimestampClass.get_float_seconds,
         "num_dayofweek": TimestampClass.get_dayofweek,
         "hour": TimestampClass.get_hour,
+        "weekday": TimestampClass.get_weekend_or_weekday,
+        "time_of_day": TimestampClass.get_time_of_day
     }
 
     SMF_FUNCTIONS = {"logistic": "logit", "linear": "ols", "mnlogit": "mnlogit"}
@@ -518,6 +542,7 @@ class RedditRegression(TimestampClass, QuantileClass):
             "author_comment_count",
             "activity_ratio",
             "mean_author_sentiment",
+            "mean_author_score",
         ]
         # NOTE is creating these regardless of desired x_cols innefficient??
 
@@ -614,15 +639,16 @@ class RedditRegression(TimestampClass, QuantileClass):
             ) / author_activity.author_all_activity_count
 
             # get mean sentiment score
-            author_mean_sentiment = (
-                thread_activity["all_activity"][["author", "sentiment_score"]]
-                .groupby("author")
-                .mean()
-                .rename(columns={"sentiment_score": f"mean_author_sentiment"})
-            )
+            mean_author_scores_lookup = {
+                "mean_author_sentiment": "sentiment_score",
+                "mean_author_score": "score",
+            }
 
-            # combine to form author info df
-            author_info = pd.concat((author_activity, author_mean_sentiment), axis=1)
+            author_info = author_activity
+            for key in mean_author_scores_lookup:
+                new_author_col = thread_activity["all_activity"][["author", mean_author_scores_lookup[key]]].groupby("author").mean().rename(columns={mean_author_scores_lookup[key]: key})
+                author_info = pd.concat((author_info, new_author_col), axis=1)
+
 
             # convert to dict of mapping dicts to add to thread data from day
             author_info_maps = author_info.to_dict()
@@ -878,7 +904,18 @@ class RedditRegression(TimestampClass, QuantileClass):
         for col in [
             x for x in self.COLUMN_FUNCTIONS if x in self.regression_params["x_cols"]
         ]:
-            model_data[col] = model_data.timestamp.apply(self.COLUMN_FUNCTIONS[col])
+            new_col = model_data.timestamp.apply(self.COLUMN_FUNCTIONS[col])
+            if is_numeric_dtype(new_col):
+                model_data[col] = new_col
+            else:
+                # for categorical data, need to get dummy columns and change the x cols
+                new_col = new_col.astype("category")
+                new_cols = new_col.str.get_dummies()
+                self.regression_params["x_cols"].remove(col)
+                self.regression_params["x_cols"] += list(new_cols.columns)
+                model_data = pd.concat((model_data, new_cols), axis=-1)
+
+
 
         # if mnlogit, then need to classify y data
         if self.regression_params["regression_type"] == "mnlogit":
@@ -1737,8 +1774,8 @@ class RedditRegression(TimestampClass, QuantileClass):
         X_COLS = [
             "sentiment_sign",
             "sentiment_magnitude",
-            "time_in_secs",
-            "num_dayofweek",
+            "time_of_day",
+            "weekday",
             "activity_ratio",
             "mean_author_sentiment_sign",
             "mean_author_sentiment_magnitude",
