@@ -330,7 +330,7 @@ class RedditRegression(TimestampClass, QuantileClass):
 
         # only need certain cols from thread data
         self.thread_data = regression_params["thread_data"][
-            ["thread_id", "id", "timestamp", "author", "sentiment_score", "domain"]
+            ["thread_id", "id", "timestamp", "author", "score", "sentiment_score", "domain"]
         ]
 
         del regression_params["thread_data"]
@@ -901,6 +901,7 @@ class RedditRegression(TimestampClass, QuantileClass):
             model_data = self.perform_thresholding(model_data, calval)
 
         # make other required cols
+        
         for col in [
             x for x in self.COLUMN_FUNCTIONS if x in self.regression_params["x_cols"]
         ]:
@@ -911,9 +912,12 @@ class RedditRegression(TimestampClass, QuantileClass):
                 # for categorical data, need to get dummy columns and change the x cols
                 new_col = new_col.astype("category")
                 new_cols = new_col.str.get_dummies()
-                self.regression_params["x_cols"].remove(col)
-                self.regression_params["x_cols"] += list(new_cols.columns)
-                model_data = pd.concat((model_data, new_cols), axis=-1)
+                model_data = pd.concat((model_data, new_cols), axis=1)
+
+                # only change x cols etc if in val
+                if ("validation_window" not in self.regression_params) | (("validation_window" in self.regression_params) and (calval == "val")):
+                    self.regression_params["x_cols"].remove(col)
+                    self.regression_params["x_cols"] += list(new_cols.columns)
 
 
 
