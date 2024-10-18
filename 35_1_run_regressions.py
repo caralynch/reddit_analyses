@@ -22,8 +22,8 @@ from regression_class import RedditRegression as RR
 # PARAMS_DICT_INFILE = f"{OUTDIR}/input_params.p"
 REGRESSION_INFILE = "regression_thread_data_april_2024.p"
 THREAD_INFILE = "clean_5_thread_data.p"
-REGRESSION_TYPES = ["linear", "mnlogit"]
-POSSIBLE_SUBREDDITS = ['books', 'crypto', 'conspiracy', 'politics']
+REGRESSION_TYPES = ["logistic", "linear", "mnlogit"]
+POSSIBLE_SUBREDDITS = ['crypto', 'conspiracy', 'politics']
 
 def get_inputs():
     if len(sys.argv) < 2:
@@ -49,11 +49,12 @@ start_date = dt.now().strftime("%d_%m_%Y")
 X_COLS = [
     "sentiment_sign",
     "sentiment_magnitude",
-    "time_in_secs",
-    "num_dayofweek",
+    "time_of_day",
+    "weekday",
     "activity_ratio",
     "mean_author_sentiment_sign",
     "mean_author_sentiment_magnitude",
+    "mean_author_score",
     "author_all_activity_count",
     "domain_pagerank",
     "domain_count",
