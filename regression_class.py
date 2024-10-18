@@ -1780,6 +1780,7 @@ class RedditRegression(TimestampClass, QuantileClass):
             "mean_author_sentiment_sign",
             "mean_author_sentiment_magnitude",
             "author_all_activity_count",
+            "mean_author_score",
         ]
 
         FIXED_PARAMS = {
