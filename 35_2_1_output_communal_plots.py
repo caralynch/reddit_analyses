@@ -8,10 +8,10 @@ import gc
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 
-MAKE_ALL_PLOTS = False
+MAKE_ALL_PLOTS = True
 MAKE_COMMUNAL_PLOTS = True
 
-DATE = "22_07_2024"
+DATE = "23_10_2024"
 RESULTS_DIR_PREFIX = f"regression_outputs/{DATE}_"
 RESULTS_DIR_SUFFIX = "/results"
 OUT_DIR_SUFFIX = "/outputs"

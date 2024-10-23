@@ -22,7 +22,7 @@ from regression_class import RedditRegression as RR
 # PARAMS_DICT_INFILE = f"{OUTDIR}/input_params.p"
 REGRESSION_INFILE = "regression_thread_data_april_2024.p"
 THREAD_INFILE = "clean_5_thread_data.p"
-REGRESSION_TYPES = ["logistic", "linear", "mnlogit"]
+REGRESSION_TYPES = ["linear", "logistic", "mnlogit"]
 POSSIBLE_SUBREDDITS = ['crypto', 'conspiracy', 'politics']
 
 def get_inputs():

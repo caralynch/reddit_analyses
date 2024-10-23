@@ -234,6 +234,7 @@ class QuantileClass:
 class RedditRegression(TimestampClass, QuantileClass):
     
     
+
     ## CLASS LOOKUPS
     COLUMN_FUNCTIONS = {
         "time_in_secs": TimestampClass.get_float_seconds,
@@ -241,6 +242,17 @@ class RedditRegression(TimestampClass, QuantileClass):
         "hour": TimestampClass.get_hour,
         "weekday": TimestampClass.get_weekend_or_weekday,
         "time_of_day": TimestampClass.get_time_of_day
+    }
+
+    WEEKDAY_MAP = {
+        "Weekday": 0,
+        "Weekend": 1,
+    }
+
+    DAYTIME_MAP = {
+        "Morning": 0,
+        "Afternoon": 1,
+        "Night": -1,
     }
 
     SMF_FUNCTIONS = {"logistic": "logit", "linear": "ols", "mnlogit": "mnlogit"}
@@ -728,10 +740,12 @@ class RedditRegression(TimestampClass, QuantileClass):
         if "FSS" in self.regression_params:
             self.loggers["info"].info("Running FSS")
             self.sm_modstrings = self.run_FSS()
+            self.loggers["info"].info("FSS finished")
         else:
             self.sm_modstrings = self.regression_params["models"]
 
         # run models
+        self.loggers["info"].info("Running models")
         self.run_models()
 
         # back to warning
@@ -746,7 +760,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         param_dict = {}
         self.smf_models = {}
         for mod_key in self.sm_modstrings:
-            self.loggers["info"].info(f"Model {mod_key}: {self.sm_modstrings[mod_key]}")
+            self.loggers["info"].info(f"Model {mod_key}")
             self.loggers["info"].debug("    Running regression")
             self.smf_models[mod_key] = self.run_regression(mod_key)
             self.loggers["info"].debug("    Getting regression metrics")
@@ -827,11 +841,20 @@ class RedditRegression(TimestampClass, QuantileClass):
     def perform_scaling(self):
         """Scale x column data using standard sklean Standard Scaler
         """
+
         self.scale_metrics_dict = {}
         self.scaled_data = {}
         for calval in self.model_data:
             x_data = self.model_data[calval][self.regression_params["x_cols"]]
-            scaled_x_data, self.scale_metrics_dict[calval] = self.scale_data(x_data)
+
+            # don't scale binary cols
+            binary_cols = list(x_data.columns[x_data.isin([-1,0,1]).all()])
+            x_to_scale = x_data[[i for i in x_data if i not in binary_cols]]
+            x_not_to_scale = x_data[binary_cols]
+
+
+            scaled_x_data, self.scale_metrics_dict[calval] = self.scale_data(x_to_scale)
+            scaled_x_data = pd.concat((scaled_x_data, x_not_to_scale), axis=1)
             y_data = self.model_data[calval][[self.regression_params["y_col"]]]
             self.scaled_data[calval] = pd.concat((y_data, scaled_x_data), axis=1)
         self.__model_data__ = self.scaled_data
@@ -908,6 +931,10 @@ class RedditRegression(TimestampClass, QuantileClass):
             new_col = model_data.timestamp.apply(self.COLUMN_FUNCTIONS[col])
             if is_numeric_dtype(new_col):
                 model_data[col] = new_col
+            elif new_col.isin(self.WEEKDAY_MAP).all():
+                model_data[col] = new_col.map(self.WEEKDAY_MAP)
+            elif new_col.isin(self.DAYTIME_MAP).all():
+                model_data[col] = new_col.map(self.DAYTIME_MAP)
             else:
                 # for categorical data, need to get dummy columns and change the x cols
                 new_col = new_col.astype("category")
@@ -1112,7 +1139,7 @@ class RedditRegression(TimestampClass, QuantileClass):
         lookup_dict = {"method": "bfgs", "maxiter": 100}
         maxiter_limit = 1500
         run_again = False
-        methods_list = ['bfgs', "cg", "nm", "newton", "lbfgs", "powell", "ncg", "basinhopping"]
+        methods_list = ['bfgs', "cg", "nm", "newton", "lbfgs", "powell", "ncg"]
         with warnings.catch_warnings(record=True) as w:
             try:
                 fit_function(disp=0, **kwargs)
@@ -1129,29 +1156,16 @@ class RedditRegression(TimestampClass, QuantileClass):
 
         if len(w) > 0:
             for w_i in w:
-                if (w_i.category == RuntimeWarning) or (
-                    w_i.category == sme.ConvergenceWarning
-                ):
+                if w_i.category in [RuntimeWarning, sme.ConvergenceWarning, sme.HessianInversionWarning]:
                     for key in lookup_dict:
                         if key not in kwargs:
                             kwargs[key] = lookup_dict[key]
                             run_again = True
                             return run_again, kwargs
-
-                    key = "maxiter"
-                    if kwargs[key] < maxiter_limit:
+                    if kwargs["maxiter"] < maxiter_limit:
                         run_again = True
                         #kwargs[key] += 50
-                        kwargs[key] = maxiter_limit
-
-                elif w_i.category == sme.HessianInversionWarning:
-                    if "maxiter" in kwargs and kwargs["maxiter"] < maxiter_limit:
-                        print("Changing maxiter")
-                        kwargs["maxiter"] += 50
-                        run_again = True
-                    elif "maxiter" not in kwargs:
-                        kwargs["maxiter"] = lookup_dict["maxiter"]
-                        run_again = True
+                        kwargs["maxiter"] = maxiter_limit
                     elif "method" not in kwargs:
                         kwargs["method"] = "bfgs"
                         run_again = True
@@ -1159,7 +1173,6 @@ class RedditRegression(TimestampClass, QuantileClass):
                         method_i = methods_list.index(kwargs["method"])
                         if method_i < len(methods_list) - 1:
                             kwargs["method"] = methods_list[method_i + 1]
-                            print(f"Using {kwargs['method']}")
                             run_again=True
                         else:
                             print("No more solvers!")
@@ -1454,10 +1467,12 @@ class RedditRegression(TimestampClass, QuantileClass):
         labels=[],
         name="",
         figsize=(7, 7),
-        legend_loc=(0.9, 0.83),
         outfile="",
         xlabel="Number of features",
         show=True,
+        title="",
+        legend=True,
+        legend_loc = (0.6,0.5)
     ):
         """Plot given metrics (aic, auc, bic) on 1 plot.
 
@@ -1478,6 +1493,7 @@ class RedditRegression(TimestampClass, QuantileClass):
             figure size, by default (7,7)
         """
         plt_colours = list(mcolors.TABLEAU_COLORS.keys())
+        linestyles = ["solid", "dotted", "dashed"]
         fig, ax = plt.subplots(1, figsize=figsize)
 
         ax_list = [ax]
@@ -1494,7 +1510,8 @@ class RedditRegression(TimestampClass, QuantileClass):
             ax_list[i].plot(
                 self.regression_metrics["metrics"].index,
                 self.regression_metrics["metrics"].loc[:, metric],
-                color=plt_colours[j],
+                color=plt_colours[i],
+                linestyle=linestyles[j],
                 label=f"{labels[j]}",
             )
             if multi_ax:
@@ -1504,9 +1521,12 @@ class RedditRegression(TimestampClass, QuantileClass):
                 ax_list[i].set_ylabel(ylabel)
             j += 1
 
-        ax.set_title(f"{name} {ylabel} vs number of features")
+        if title=="":
+            title = f"{name} {ylabel} vs number of features"
+        ax.set_title(title)
         ax.set_xlabel(xlabel)
-        fig.legend(bbox_to_anchor=legend_loc)
+        if legend:
+            fig.legend(bbox_to_anchor=legend_loc)
 
         if outfile:
             plt.savefig(outfile)
