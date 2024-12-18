@@ -11,7 +11,7 @@ import matplotlib.colors as mcolors
 MAKE_ALL_PLOTS = True
 MAKE_COMMUNAL_PLOTS = True
 
-DATE = "23_10_2024"
+DATE = "18_12_2024"
 RESULTS_DIR_PREFIX = f"regression_outputs/{DATE}_"
 RESULTS_DIR_SUFFIX = "/results"
 OUT_DIR_SUFFIX = "/outputs"

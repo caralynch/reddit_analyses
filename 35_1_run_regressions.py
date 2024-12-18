@@ -28,7 +28,7 @@ POSSIBLE_SUBREDDITS = ["crypto", "conspiracy", "politics"]
 
 def get_inputs():
     if len(sys.argv) < 2:
-        SUBREDDITS = ["crypto", "conspiracy"]
+        SUBREDDITS = ["politics"]
         COLLECTION_WINDOW = 14
         MODEL_WINDOW = 7
     else:
